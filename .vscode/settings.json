@@ -1,0 +1,14 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5443,
+      "driver": "PostgreSQL",
+      "name": "digitalgp",
+      "database": "digitalgp-database",
+      "username": "digitalgp",
+      "password": "digitalgp"
+    }
+  ]
+}

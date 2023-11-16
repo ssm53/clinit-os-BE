@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String?
+  email    String  @unique
+  password String?
+}
+
+model Patient {
+  id       Int     @id @default(autoincrement())
+  name     String?
+  IC       String @unique
+  age      Int
+  gender   String?
+  email    String  @unique
+  contact  String?
+  race     String?
+  appointment Appointment[]
+}
+
+model Appointment {
+  id       Int     @id @default(autoincrement())
+  specificpatient Patient @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
+  patientIC String    
+  reason       String?
+
+}
+
+	
