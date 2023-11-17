@@ -2,19 +2,23 @@ import express from "express";
 import { Prisma } from "@prisma/client";
 import prisma from "../utils/prisma.js";
 import { filter } from "../utils/common.js";
+import { DateTime } from "luxon"; // Import luxon library
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
     const data = req.body;
-    console.log(data.reason);
-    console.log(data.patientIC);
+    const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
+    console.log("Current time in Malaysia:", malaysiaTime.toISO());
 
     const appointment = await prisma.appointment.create({
       data: {
         reason: data.appointmentDetails.reason,
         patientIC: data.appointmentDetails.patientIC,
+        doctor: data.appointmentDetails.doctor,
+        status: "Waiting",
+        arrivalTime: malaysiaTime.toJSDate(), // Convert to JavaScript Date object
       },
     });
 
