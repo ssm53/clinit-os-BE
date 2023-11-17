@@ -34,12 +34,15 @@ model Appointment {
   specificpatient Patient @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
   patientIC String    
   reason       String?
+  date DateTime @default(now())
   doctor  String @default("null")
   status String @default("waiting")
   arrivalTime DateTime @default(now())
   consultStartTime DateTime @default(now())
+  waitingTime DateTime? 
   consultEndTime DateTime @default(now())
   documents String @default("null")
+  notes String @default("null")
 }
 
 

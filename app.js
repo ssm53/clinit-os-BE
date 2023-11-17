@@ -2,6 +2,7 @@ import express from "express";
 import prisma from "./src/utils/prisma.js";
 import morgan from "morgan";
 import cors from "cors"; // Import the cors middleware
+import { DateTime } from "luxon"; // Import luxon library
 import usersRouter from "./src/controllers/users.controllers.js";
 import authUserRouter from "./src/controllers/authUser.controllers.js";
 import registerPatientsRouter from "./src/controllers/registerPatients.controllers.js";
@@ -63,11 +64,101 @@ app.get("/part-patient-info/:patientIC", async (req, res) => {
         .status(404)
         .json({ error: "No patients found with the specified IC" });
     }
-    console.log(partPatientInfo);
 
     return res.json({ partPatientInfo });
   } catch (error) {
     console.error("Error filtering patients:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// adding notes to appointment table
+app.post("/add-notes/:appointmentID", async (req, res) => {
+  try {
+    const data = req.body;
+    const appointmentID = req.params.appointmentID;
+
+    // Use Prisma to update the notes field for the specified appointment ID
+    const updatedAppointment = await prisma.appointment.update({
+      where: {
+        id: parseInt(appointmentID), // Assuming id is of type Int
+      },
+      data: {
+        notes: data.notes,
+      },
+    });
+
+    return res.status(200).json({ updatedAppointment });
+  } catch (error) {
+    console.error("Error adding notes:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// getting patient history
+app.get("/get-patient-history/:patientIC", async (req, res) => {
+  const patientIC = req.params.patientIC;
+  try {
+    const patientHistory = await prisma.appointment.findMany({
+      where: {
+        patientIC: patientIC,
+      },
+    });
+
+    console.log(patientHistory);
+
+    if (patientHistory.length === 0) {
+      return res.status(404).json({ error: "No prior appointments found" });
+    }
+
+    return res.json({ patientHistory });
+  } catch (error) {
+    console.error("Error filtering patients:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// consultation started - update consultstarttime and calculate waitingtime
+app.post("/start-consultation/:appointmentID", async (req, res) => {
+  try {
+    const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
+
+    const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
+    console.log("Current time in Malaysia:", malaysiaTime.toISO());
+
+    // Update consult_start_time field in the appointment table
+    const consultStartTime = await prisma.appointment.update({
+      where: { id: appointmentID },
+      data: { consultStartTime: malaysiaTime },
+    });
+
+    // Calculate waiting time (current time in Malaysia - arrivalTime)
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentID },
+    });
+
+    const arrivalTime = DateTime.fromISO(appointment.arrivalTime);
+    const waitingTime = malaysiaTime.diff(arrivalTime);
+
+    // Update waitingTime field in the appointment table
+    await prisma.appointment.update({
+      where: { id: appointmentID },
+      data: { waitingTime: waitingTime.toISO() }, // Convert DateTime to ISO string
+    });
+
+    // Update status field to "serving"
+    const changeStatus = await prisma.appointment.update({
+      where: { id: appointmentID },
+      data: { status: "serving" },
+    });
+
+    return res.status(200).json({
+      consultStartTime,
+      waitingTime: waitingTime.toObject(), // Convert waitingTime to object
+      changeStatus,
+    });
+  } catch (error) {
+    console.error("Error:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });

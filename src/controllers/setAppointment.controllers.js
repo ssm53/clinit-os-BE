@@ -19,6 +19,7 @@ router.post("/", async (req, res) => {
         doctor: data.appointmentDetails.doctor,
         status: "Waiting",
         arrivalTime: malaysiaTime.toJSDate(), // Convert to JavaScript Date object
+        date: malaysiaTime.toJSDate(), // Set the date to the current date in Malaysia
       },
     });
 

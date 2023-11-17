@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Appointment" ADD COLUMN     "waitingTime" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
