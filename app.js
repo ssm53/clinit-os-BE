@@ -132,19 +132,20 @@ app.post("/start-consultation/:appointmentID", async (req, res) => {
       data: { consultStartTime: malaysiaTime },
     });
 
-    // Calculate waiting time (current time in Malaysia - arrivalTime)
-    const appointment = await prisma.appointment.findUnique({
-      where: { id: appointmentID },
-    });
+    // calc for waiting time
+    // // Calculate waiting time (current time in Malaysia - arrivalTime)
+    // const appointment = await prisma.appointment.findUnique({
+    //   where: { id: appointmentID },
+    // });
 
-    const arrivalTime = DateTime.fromISO(appointment.arrivalTime);
-    const waitingTime = malaysiaTime.diff(arrivalTime);
+    // const arrivalTime = DateTime.fromISO(appointment.arrivalTime);
+    // const waitingTime = malaysiaTime.diff(arrivalTime);
 
-    // Update waitingTime field in the appointment table
-    await prisma.appointment.update({
-      where: { id: appointmentID },
-      data: { waitingTime: waitingTime.toISO() }, // Convert DateTime to ISO string
-    });
+    // // Update waitingTime field in the appointment table
+    // await prisma.appointment.update({
+    //   where: { id: appointmentID },
+    //   data: { waitingTime: waitingTime.toISO() }, // Convert DateTime to ISO string
+    // });
 
     // Update status field to "serving"
     const changeStatus = await prisma.appointment.update({
@@ -154,8 +155,65 @@ app.post("/start-consultation/:appointmentID", async (req, res) => {
 
     return res.status(200).json({
       consultStartTime,
-      waitingTime: waitingTime.toObject(), // Convert waitingTime to object
       changeStatus,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// consultation ended - update consultendttime and calculate consultation time
+app.post("/end-consultation/:appointmentID", async (req, res) => {
+  try {
+    const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
+
+    const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
+    console.log("Current time in Malaysia:", malaysiaTime.toISO());
+
+    // Update consult_end_time field in the appointment table
+    const consultEndTime = await prisma.appointment.update({
+      where: { id: appointmentID },
+      data: { consultEndTime: malaysiaTime },
+    });
+
+    // Update status field to "dispensary"
+    const changeStatus = await prisma.appointment.update({
+      where: { id: appointmentID },
+      data: { status: "dispensary" },
+    });
+
+    return res.status(200).json({
+      consultEndTime,
+      changeStatus,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// add treatment plan to appointment table
+app.post("/add-treatment-plan/:appointmentID", async (req, res) => {
+  try {
+    const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
+    const data = req.body;
+
+    // Update medicine fields the appointment table
+    const treatmentPlan = await prisma.appointment.update({
+      where: { id: appointmentID },
+      data: {
+        medName1: data.meds1,
+        quantity1: data.quantity1,
+        notes1: data.notes1,
+        medName2: data.meds2,
+        quantity2: data.quantity2,
+        notes2: data.notes2,
+      },
+    });
+
+    return res.status(200).json({
+      treatmentPlan,
     });
   } catch (error) {
     console.error("Error:", error);

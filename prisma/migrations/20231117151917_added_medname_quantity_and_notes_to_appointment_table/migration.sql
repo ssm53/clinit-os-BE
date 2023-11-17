@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Appointment" ADD COLUMN     "medName1" TEXT NOT NULL DEFAULT 'null',
+ADD COLUMN     "medName2" TEXT NOT NULL DEFAULT 'null',
+ADD COLUMN     "notes1" TEXT NOT NULL DEFAULT 'null',
+ADD COLUMN     "notes2" TEXT NOT NULL DEFAULT 'null',
+ADD COLUMN     "quantity1" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "quantity2" INTEGER NOT NULL DEFAULT 0;
