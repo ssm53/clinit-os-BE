@@ -27,6 +27,7 @@ model Patient {
   contact  String?
   race     String?
   appointment Appointment[]
+  cashRevenue CashRevenue[]
 }
 
 model Appointment {
@@ -48,10 +49,24 @@ model Appointment {
   notes1 String @default("null")
   medName2 String @default("null")
   quantity2 Int @default(0)
+  amount Int @default(0)
   notes2 String @default("null")
-
-
+  cashRevenue CashRevenue[]
 }
 
+model Medicine {
+  id Int @id @default(autoincrement())
+  medicine String @unique
+  quantity Int
+  price Int
+}
 
+model CashRevenue {
+  id Int @id @default(autoincrement())
+  appId Appointment @relation(fields: [appointmentID], references: [id]) // Define the foreign key relationship 
+  appointmentID Int
+  patic Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
+  patientIC String?
+  amount Int
+}
 	
