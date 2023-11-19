@@ -494,6 +494,7 @@ app.get("/get-appt-info/:id", async (req, res) => {
         .status(404)
         .json({ error: "No appts found with the specified id" });
     }
+    console.log(apptInfo);
 
     return res.json({ apptInfo });
   } catch (error) {
@@ -555,7 +556,10 @@ app.patch("/edit-treatment-plan/:id", async (req, res) => {
     // Return a success response
     return res
       .status(200)
-      .json({ message: "notes details updated successfully", updatedNotes });
+      .json({
+        message: "notes details updated successfully",
+        updatedTreatmentPlan,
+      });
   } catch (error) {
     // Handle errors and return an error response if needed
     console.error("Error updating details:", error);
