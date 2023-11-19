@@ -13,6 +13,7 @@ import appointmentWaitingRouter from "./src/controllers/appointmentWaiting.contr
 import appointmentDispensaryRouter from "./src/controllers/appointmentDispensary.controllers.js";
 import addMedicineRouter from "./src/controllers/addMedicine.controllers.js";
 import addExistingMedicineRouter from "./src/controllers/addExistingMedicine.controllers.js";
+import appointmentAllRouter from "./src/controllers/appointmentAll.controllers.js";
 
 const app = express();
 app.use(morgan("combined"));
@@ -28,6 +29,7 @@ app.use("/appointment-waiting", appointmentWaitingRouter);
 app.use("/appointment-dispensary", appointmentDispensaryRouter);
 app.use("/add-medicine", addMedicineRouter);
 app.use("/add-existing-medicine", addExistingMedicineRouter);
+app.use("/appointment-all", appointmentAllRouter);
 //START OF ENDPOINTS
 
 // filter patients end point
@@ -397,6 +399,167 @@ app.post("/click-paid/:appointmentID", async (req, res) => {
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// a get request to get specific patient details
+app.get("/get-patient-details/:ic", async (req, res) => {
+  const ic = req.params.ic;
+
+  try {
+    const patientDetails = await prisma.patient.findUnique({
+      where: { IC: ic },
+    });
+
+    if (!patientDetails) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    return res.json({ patientDetails });
+  } catch (error) {
+    console.error("Error fetching patient details:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// here i want to do an endpoint to update patiend details
+app.patch("/update-patient-details/:ic", async (req, res) => {
+  const ic = req.params.ic;
+  const data = req.body; // Assuming your request body contains the updated data
+
+  try {
+    // Use Prisma to update the seller's details
+    const updatedDetails = await prisma.patient.update({
+      where: {
+        IC: ic,
+      },
+      // name, IC, age, gender, email, contact, race
+      data: {
+        name: data.name,
+        IC: data.IC,
+        age: data.age,
+        gender: data.gender,
+        email: data.email,
+        contact: data.contact,
+        race: data.race,
+      },
+    });
+
+    // Return a success response
+    return res
+      .status(200)
+      .json({ message: "Seller details updated successfully", updatedDetails });
+  } catch (error) {
+    // Handle errors and return an error response if needed
+    console.error("Error updating details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// get part patient info for consulattion page
+app.get("/get-patient-info/:ic", async (req, res) => {
+  const patientIC = req.params.ic;
+  try {
+    const patientInfo = await prisma.patient.findMany({
+      where: {
+        IC: patientIC,
+      },
+    });
+
+    if (patientInfo.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No patients found with the specified IC" });
+    }
+
+    return res.json({ patientInfo });
+  } catch (error) {
+    console.error("Error filtering patients:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// get part patient info for consulattion page
+app.get("/get-appt-info/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const apptInfo = await prisma.appointment.findMany({
+      where: {
+        id: id,
+      },
+    });
+
+    if (apptInfo.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No appts found with the specified id" });
+    }
+
+    return res.json({ apptInfo });
+  } catch (error) {
+    console.error("Error finding info:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// here i want to do an endpoint to update appt details
+app.patch("/edit-notes/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const data = req.body; // Assuming your request body contains the updated data
+
+  try {
+    // Use Prisma to update the seller's details
+    const updatedNotes = await prisma.appointment.update({
+      where: {
+        id: id,
+      },
+      // name, IC, age, gender, email, contact, race
+      data: {
+        notes: data.notes,
+      },
+    });
+
+    // Return a success response
+    return res
+      .status(200)
+      .json({ message: "notes details updated successfully", updatedNotes });
+  } catch (error) {
+    // Handle errors and return an error response if needed
+    console.error("Error updating details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// here i want to do an endpoint to update appt details
+app.patch("/edit-treatment-plan/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const data = req.body; // Assuming your request body contains the updated data
+
+  try {
+    // Use Prisma to update the seller's details
+    const updatedTreatmentPlan = await prisma.appointment.update({
+      where: {
+        id: id,
+      },
+      // name, IC, age, gender, email, contact, race
+      data: {
+        medName1: data.meds1,
+        quantity1: data.quantity1,
+        notes1: data.notes1,
+        medName2: data.meds2,
+        quantity2: data.quantity2,
+        notes2: data.notes2,
+      },
+    });
+
+    // Return a success response
+    return res
+      .status(200)
+      .json({ message: "notes details updated successfully", updatedNotes });
+  } catch (error) {
+    // Handle errors and return an error response if needed
+    console.error("Error updating details:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
