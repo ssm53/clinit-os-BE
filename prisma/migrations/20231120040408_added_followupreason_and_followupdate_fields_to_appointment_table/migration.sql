@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Appointment" ADD COLUMN     "followUpDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "followUpReason" TEXT NOT NULL DEFAULT 'null';

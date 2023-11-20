@@ -51,6 +51,8 @@ model Appointment {
   quantity2 Int @default(0)
   amount Int @default(0)
   notes2 String @default("null")
+  followUpReason String @default("null")
+  followUpDate DateTime @default(now())
   cashRevenue CashRevenue[]
 }
 

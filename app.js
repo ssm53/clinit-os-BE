@@ -14,6 +14,8 @@ import appointmentDispensaryRouter from "./src/controllers/appointmentDispensary
 import addMedicineRouter from "./src/controllers/addMedicine.controllers.js";
 import addExistingMedicineRouter from "./src/controllers/addExistingMedicine.controllers.js";
 import appointmentAllRouter from "./src/controllers/appointmentAll.controllers.js";
+import getNeedRestockMeds from "./src/controllers/getNeedRestockMedicine.controllers.js";
+import getFollowUpDetailsRouter from "./src/controllers/getFollowUpDetails.controllers.js";
 
 const app = express();
 app.use(morgan("combined"));
@@ -30,6 +32,8 @@ app.use("/appointment-dispensary", appointmentDispensaryRouter);
 app.use("/add-medicine", addMedicineRouter);
 app.use("/add-existing-medicine", addExistingMedicineRouter);
 app.use("/appointment-all", appointmentAllRouter);
+app.use("/get-need-restock-medicine", getNeedRestockMeds);
+app.use("/get-follow-up-details", getFollowUpDetailsRouter);
 //START OF ENDPOINTS
 
 // filter patients end point
@@ -554,15 +558,61 @@ app.patch("/edit-treatment-plan/:id", async (req, res) => {
     });
 
     // Return a success response
-    return res
-      .status(200)
-      .json({
-        message: "notes details updated successfully",
-        updatedTreatmentPlan,
-      });
+    return res.status(200).json({
+      message: "notes details updated successfully",
+      updatedTreatmentPlan,
+    });
   } catch (error) {
     // Handle errors and return an error response if needed
     console.error("Error updating details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// delete medicine endpoint
+app.delete("/delete-medicine/:medicineToDel", async (req, res) => {
+  try {
+    const medicineToDel = req.params.medicineToDel;
+
+    // Delete the image from the database
+    await prisma.medicine.delete({
+      where: {
+        medicine: medicineToDel,
+      },
+    });
+
+    return res.status(204).send(); // Successful deletion (status 204)
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// here aim is to update the appointment field with followUpReason and followUpDate
+app.patch("/add-follow-up/:appointmentID", async (req, res) => {
+  const id = parseInt(req.params.appointmentID);
+  const data = req.body; // Assuming your request body contains the updated data
+
+  try {
+    // Use Prisma to update the seller's details
+    const addFollowUp = await prisma.appointment.update({
+      where: {
+        id: id,
+      },
+      // name, IC, age, gender, email, contact, race
+      data: {
+        followUpReason: data.followUpReason,
+        followUpDate: data.followUpDate,
+      },
+    });
+
+    // Return a success response
+    return res
+      .status(200)
+      .json({ message: "Follow up deets updated successfully", addFollowUp });
+  } catch (error) {
+    // Handle errors and return an error response if needed
+    console.error("Error adding follow up:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
