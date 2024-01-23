@@ -3,6 +3,8 @@ import prisma from "./src/utils/prisma.js";
 import morgan from "morgan";
 import cors from "cors"; // Import the cors middleware
 import { DateTime } from "luxon"; // Import luxon library
+import fs from "fs"; // generating PDF
+import PDFDocument from "./pdfkit-tables.js"; // generating PDF
 import usersRouter from "./src/controllers/users.controllers.js";
 import authUserRouter from "./src/controllers/authUser.controllers.js";
 import registerPatientsRouter from "./src/controllers/registerPatients.controllers.js";
@@ -34,6 +36,7 @@ app.use("/add-existing-medicine", addExistingMedicineRouter);
 app.use("/appointment-all", appointmentAllRouter);
 app.use("/get-need-restock-medicine", getNeedRestockMeds);
 app.use("/get-follow-up-details", getFollowUpDetailsRouter);
+
 //START OF ENDPOINTS
 
 // filter patients end point
@@ -350,10 +353,79 @@ app.get("/invoice-details/:appointmentID", async (req, res) => {
 
     console.log(invoiceDetails);
 
-    if (invoiceDetails.length === 0) {
-      return res.status(404).json({ error: "No appointments found" });
+    // START OF GENERATION OF PDF
+    // Create The PDF document
+    const doc = new PDFDocument();
+
+    // Pipe the PDF into a patient's file
+    doc.pipe(fs.createWriteStream(`${appointmentID}.pdf`));
+
+    // Add the header - https://pspdfkit.com/blog/2019/generate-invoices-pdfkit-node/
+    doc
+      .image("logo.png", 50, 45, { width: 50 })
+      .fillColor("#444444")
+      .fontSize(20)
+      .text(`Invoice ${appointmentID}`, 110, 57)
+      .fontSize(10)
+      .text("25, Jalan 4/39", 200, 65, { align: "right" })
+      .text("Petaling Jaya, Malaysia", 200, 80, { align: "right" })
+      .moveDown();
+
+    // Create the table - https://www.andronio.me/2017/09/02/pdfkit-tables/
+    const table = {
+      // ic, reason, date, doctor, meds (we do all of it in here), amount
+      headers: [
+        "IC",
+        "Reason",
+        "Date",
+        "Doctor",
+        "Medicine 1",
+        "Quantity 1",
+        "Medicine 1",
+        "Quantity 2",
+        "Amount",
+        // "Height",
+        // "Weight",
+      ],
+      rows: [],
+    };
+
+    // Add the patients to the table
+    for (const details of invoiceDetails) {
+      table.rows.push([
+        details.patientIC,
+        details.reason,
+        details.date,
+        details.doctor,
+        details.medName1,
+        details.quantity1,
+        details.medName2,
+        details.quantity2,
+        details.amount,
+      ]);
     }
-    return res.json({ invoiceDetails });
+
+    // Draw the table
+    doc.moveDown().table(table, 10, 125, { width: 590 });
+
+    // Finalize the PDF and end the stream
+    doc.end();
+
+    // END OF PDF GENERATION
+
+    // Pipe the PDF directly to the response stream
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Invoice_${appointmentID}.pdf`
+    );
+
+    doc.pipe(res);
+
+    // if (invoiceDetails.length === 0) {
+    //   return res.status(404).json({ error: "No appointments found" });
+    // }
+    // return res.json({ invoiceDetails });
   } catch (error) {
     console.error("Error getting appointment:", error);
     return res.status(500).json({ error: "Internal Server Error" });
