@@ -781,4 +781,92 @@ app.get("/mc-details/:appointmentID", async (req, res) => {
   }
 });
 
+// add letter details to be generated later
+app.post("/add-letter-details/:appointmentID", async (req, res) => {
+  try {
+    const appointmentID = parseInt(req.params.appointmentID); // Convert to integer
+    const data = req.body;
+
+    // Update the existing appointment with letter details
+    const letterDetails = await prisma.appointment.update({
+      where: {
+        id: appointmentID,
+      },
+      data: {
+        letterDate: data.letterDate,
+        letterContent: data.content,
+      },
+    });
+    return res.status(200).json({
+      letterDetails,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Cant add MC details" });
+  }
+});
+
+// get letter details from appt table for nurses to generate
+app.get("/letter-details/:appointmentID", async (req, res) => {
+  const appointmentID = parseInt(req.params.appointmentID);
+  try {
+    let letterDetails = await prisma.appointment.findMany({
+      where: { id: appointmentID },
+    });
+
+    // START OF GENERATION OF PDF
+    // Create The PDF document
+    const doc = new PDFDocument();
+
+    // Pipe the PDF into a patient's file
+    doc.pipe(fs.createWriteStream(`${appointmentID}.pdf`));
+
+    // Add the header - https://pspdfkit.com/blog/2019/generate-invoices-pdfkit-node/
+    doc
+      .image("logo.png", 50, 45, { width: 50 })
+      .fillColor("#444444")
+      .fontSize(20)
+      .text(`Referral Letter ${appointmentID}`, 110, 57)
+      .fontSize(10)
+      .text("25, Jalan 4/39", 200, 65, { align: "right" })
+      .text("Petaling Jaya, Malaysia", 200, 80, { align: "right" })
+      .moveDown();
+
+    // Create the table - https://www.andronio.me/2017/09/02/pdfkit-tables/
+    const table = {
+      headers: ["IC", "Date", "Letter"],
+      rows: [],
+    };
+
+    // Add the mcDetails to the table
+    for (const details of letterDetails) {
+      table.rows.push([
+        details.patientIC,
+        details.letterDate,
+        details.letterContent,
+      ]);
+    }
+
+    // Draw the table
+    doc.moveDown().table(table, 10, 125, { width: 590 });
+
+    // Finalize the PDF and end the stream
+    doc.end();
+
+    // END OF PDF GENERATION
+
+    // Pipe the PDF directly to the response stream
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Referral_Letter_${appointmentID}.pdf`
+    );
+
+    doc.pipe(res);
+  } catch (error) {
+    console.error("Error doing letter:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 export default app;

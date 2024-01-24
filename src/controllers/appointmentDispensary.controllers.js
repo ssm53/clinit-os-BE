@@ -34,6 +34,17 @@ router.get("/", async (req, res) => {
 
       // Add mcDetails to the current appointment object
       appointmentsDispensary[i].mcDetails = mcDetails;
+
+      // Fetch employer field from the Appointment table to see if letter button is needed or not
+      const letterDetails = await prisma.appointment
+        .findUnique({
+          where: { id: appointmentsDispensary[i].id },
+          select: { letterContent: true },
+        })
+        .then((result) => result?.letterContent);
+
+      // Add letterDetails to the current appointment object
+      appointmentsDispensary[i].letterDetails = letterDetails;
     }
 
     console.log(appointmentsDispensary);

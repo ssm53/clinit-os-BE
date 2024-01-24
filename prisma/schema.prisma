@@ -58,6 +58,8 @@ model Appointment {
   mcEnd DateTime @default(now())
   employer String?
   mcReason String?
+  letterDate DateTime @default(now())
+  letterContent String?
   cashRevenue CashRevenue[]
   MC MC[]
 }
