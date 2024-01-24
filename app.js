@@ -689,4 +689,96 @@ app.patch("/add-follow-up/:appointmentID", async (req, res) => {
   }
 });
 
+// add mc details to be generated later
+app.post("/add-mc-details/:appointmentID", async (req, res) => {
+  try {
+    const appointmentID = parseInt(req.params.appointmentID); // Convert to integer
+    const data = req.body;
+
+    // Update the existing appointment with MC details
+    const mcDetails = await prisma.appointment.update({
+      where: {
+        id: appointmentID,
+      },
+      data: {
+        mcReason: data.reason,
+        employer: data.employer,
+        mcStart: data.mcStartDate,
+        mcEnd: data.mcEndDate,
+      },
+    });
+    return res.status(200).json({
+      mcDetails,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Cant add MC details" });
+  }
+});
+
+// get mc details from appt table for nurses to generate
+app.get("/mc-details/:appointmentID", async (req, res) => {
+  const appointmentID = parseInt(req.params.appointmentID);
+  try {
+    let mcDetails = await prisma.appointment.findMany({
+      where: { id: appointmentID },
+    });
+
+    // START OF GENERATION OF PDF
+    // Create The PDF document
+    const doc = new PDFDocument();
+
+    // Pipe the PDF into a patient's file
+    doc.pipe(fs.createWriteStream(`${appointmentID}.pdf`));
+
+    // Add the header - https://pspdfkit.com/blog/2019/generate-invoices-pdfkit-node/
+    doc
+      .image("logo.png", 50, 45, { width: 50 })
+      .fillColor("#444444")
+      .fontSize(20)
+      .text(`MC ${appointmentID}`, 110, 57)
+      .fontSize(10)
+      .text("25, Jalan 4/39", 200, 65, { align: "right" })
+      .text("Petaling Jaya, Malaysia", 200, 80, { align: "right" })
+      .moveDown();
+
+    // Create the table - https://www.andronio.me/2017/09/02/pdfkit-tables/
+    const table = {
+      headers: ["IC", "Reason", "Start Date", "End Date", "Employer"],
+      rows: [],
+    };
+
+    // Add the mcDetails to the table
+    for (const details of mcDetails) {
+      table.rows.push([
+        details.patientIC,
+        details.mcReason,
+        details.mcStart,
+        details.mcEnd,
+        details.employer,
+      ]);
+    }
+
+    // Draw the table
+    doc.moveDown().table(table, 10, 125, { width: 590 });
+
+    // Finalize the PDF and end the stream
+    doc.end();
+
+    // END OF PDF GENERATION
+
+    // Pipe the PDF directly to the response stream
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=MC_${appointmentID}.pdf`
+    );
+
+    doc.pipe(res);
+  } catch (error) {
+    console.error("Error getting appointment:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 export default app;

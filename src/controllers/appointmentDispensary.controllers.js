@@ -23,6 +23,17 @@ router.get("/", async (req, res) => {
 
       // Add patient details to the current appointment object
       appointmentsDispensary[i].patientDetails = patientDetails;
+
+      // Fetch employer field from the Appointment table to see if mc button is needed or not
+      const mcDetails = await prisma.appointment
+        .findUnique({
+          where: { id: appointmentsDispensary[i].id },
+          select: { employer: true },
+        })
+        .then((result) => result?.employer);
+
+      // Add mcDetails to the current appointment object
+      appointmentsDispensary[i].mcDetails = mcDetails;
     }
 
     console.log(appointmentsDispensary);

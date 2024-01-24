@@ -28,6 +28,7 @@ model Patient {
   race     String?
   appointment Appointment[]
   cashRevenue CashRevenue[]
+  MC MC[]
 }
 
 model Appointment {
@@ -53,7 +54,12 @@ model Appointment {
   notes2 String @default("null")
   followUpReason String @default("null")
   followUpDate DateTime @default(now())
+  mcStart DateTime @default(now())
+  mcEnd DateTime @default(now())
+  employer String?
+  mcReason String?
   cashRevenue CashRevenue[]
+  MC MC[]
 }
 
 model Medicine {
@@ -70,5 +76,18 @@ model CashRevenue {
   patic Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
   patientIC String?
   amount Int
+}
+
+model MC {
+  id Int @id @default(autoincrement())
+  appId Appointment @relation(fields: [appointmentID], references: [id])
+  appointmentID Int
+  patic Patient? @relation(fields: [patientIC], references: [IC])
+  patientIC String?
+  name String
+  mcStart DateTime 
+  mcEnd DateTime
+  employer String?
+  reason String?
 }
 	
