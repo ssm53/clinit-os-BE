@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
 
     let appointmentsToday = await prisma.appointment.findMany({
       where: {
-        arrivalTime: {
+        date: {
           gte: malaysiaTime.startOf("day").toJSDate(),
           lte: malaysiaTime.endOf("day").toJSDate(),
         },

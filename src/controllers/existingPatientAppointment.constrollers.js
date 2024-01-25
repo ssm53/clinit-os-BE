@@ -15,6 +15,7 @@ router.post("/", async (req, res) => {
     // make appt in appt table
     const appointment = await prisma.appointment.create({
       data: {
+        date: data.date,
         reason: data.reason,
         patientIC: data.patientIC,
         doctor: data.doctor,
