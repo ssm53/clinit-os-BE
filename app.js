@@ -10,7 +10,7 @@ import authUserRouter from "./src/controllers/authUser.controllers.js";
 import registerPatientsRouter from "./src/controllers/registerPatients.controllers.js";
 import allPatientsRouter from "./src/controllers/allPatients.controllers.js";
 import newPatientAppointmentRouter from "./src/controllers/newPatientAppointment.controllers.js";
-import appointmentTodayRouter from "./src/controllers/appointmentToday.controllers.js";
+import appointmentBookingTodayRouter from "./src/controllers/appointmentBookingToday.controllers.js";
 import appointmentWaitingRouter from "./src/controllers/appointmentWaiting.controllers.js";
 import appointmentDispensaryRouter from "./src/controllers/appointmentDispensary.controllers.js";
 import addMedicineRouter from "./src/controllers/addMedicine.controllers.js";
@@ -19,6 +19,7 @@ import appointmentAllRouter from "./src/controllers/appointmentAll.controllers.j
 import getNeedRestockMeds from "./src/controllers/getNeedRestockMedicine.controllers.js";
 import getFollowUpDetailsRouter from "./src/controllers/getFollowUpDetails.controllers.js";
 import existingPatientAppointmentRouter from "./src/controllers/existingPatientAppointment.constrollers.js";
+import existingPatientAppointmentBookingRouter from "./src/controllers/existingPatientAppointmentBooking.controllers.js";
 import { validateEditPatientDetails } from "./src/validators/validateEditPatientDetails.js";
 
 const app = express();
@@ -30,7 +31,7 @@ app.use("/auth-user", authUserRouter);
 app.use("/register-patient", registerPatientsRouter);
 app.use("/all-patients", allPatientsRouter);
 app.use("/new-patient-appointment", newPatientAppointmentRouter);
-app.use("/appointment-today", appointmentTodayRouter);
+app.use("/appointment-booking-today", appointmentBookingTodayRouter);
 app.use("/appointment-waiting", appointmentWaitingRouter);
 app.use("/appointment-dispensary", appointmentDispensaryRouter);
 app.use("/add-medicine", addMedicineRouter);
@@ -39,7 +40,10 @@ app.use("/appointment-all", appointmentAllRouter);
 app.use("/get-need-restock-medicine", getNeedRestockMeds);
 app.use("/get-follow-up-details", getFollowUpDetailsRouter);
 app.use("/existing-patient-appointment", existingPatientAppointmentRouter);
-
+app.use(
+  "/existing-patient-appointment-booking",
+  existingPatientAppointmentBookingRouter
+);
 //START OF ENDPOINTS
 
 // filter patients end point

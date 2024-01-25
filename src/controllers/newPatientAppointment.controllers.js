@@ -34,7 +34,7 @@ router.post("/", async (req, res) => {
     // make appt in appt table
     const appointment = await prisma.appointment.create({
       data: {
-        date: data.date,
+        date: malaysiaTime.toJSDate(), // Set the date to the current date in Malaysia
         reason: data.reason,
         patientIC: data.IC,
         doctor: data.doctor,

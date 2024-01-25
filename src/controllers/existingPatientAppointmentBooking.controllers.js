@@ -10,17 +10,14 @@ router.post("/", async (req, res) => {
   const data = req.body;
 
   try {
-    const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
-
     // make appt in appt table
     const appointment = await prisma.appointment.create({
       data: {
+        date: data.date,
         reason: data.reason,
         patientIC: data.patientIC,
         doctor: data.doctor,
-        status: "Waiting",
-        arrivalTime: malaysiaTime.toJSDate(), // Convert to JavaScript Date object
-        date: malaysiaTime.toJSDate(), // Set the date to the current date in Malaysia
+        status: "Booking",
       },
     });
 
