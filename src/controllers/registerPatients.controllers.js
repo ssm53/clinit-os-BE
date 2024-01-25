@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
       error: validationErrors,
     });
 
-  prisma.patient // i changed this to image
+  prisma.patient
     .create({
       data: {
         ...data,
