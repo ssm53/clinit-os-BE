@@ -19,6 +19,7 @@ import appointmentAllRouter from "./src/controllers/appointmentAll.controllers.j
 import getNeedRestockMeds from "./src/controllers/getNeedRestockMedicine.controllers.js";
 import getFollowUpDetailsRouter from "./src/controllers/getFollowUpDetails.controllers.js";
 import existingPatientAppointmentRouter from "./src/controllers/existingPatientAppointment.constrollers.js";
+import { validateEditPatientDetails } from "./src/validators/validateEditPatientDetails.js";
 
 const app = express();
 app.use(morgan("combined"));
@@ -504,6 +505,14 @@ app.get("/get-patient-details/:ic", async (req, res) => {
 app.patch("/update-patient-details/:ic", async (req, res) => {
   const ic = req.params.ic;
   const data = req.body; // Assuming your request body contains the updated data
+
+  const validationErrors = validateEditPatientDetails(data);
+  console.log(validationErrors);
+
+  if (Object.keys(validationErrors).length != 0)
+    return res.status(400).send({
+      error: validationErrors,
+    });
 
   try {
     // Use Prisma to update the seller's details
