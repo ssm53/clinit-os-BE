@@ -5,17 +5,17 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const appointmentsWaiting = await prisma.appointment.findMany({
+    const appointmentsCompleted = await prisma.appointment.findMany({
       where: {
         status: {
-          in: ["waiting", "Waiting"],
+          in: ["completed", "Completed"],
         },
       },
     });
 
-    // Iterate through appointmentsToday
-    for (let i = 0; i < appointmentsWaiting.length; i++) {
-      const patientIC = appointmentsWaiting[i].patientIC;
+    // Iterate through appointmentsCompleted
+    for (let i = 0; i < appointmentsCompleted.length; i++) {
+      const patientIC = appointmentsCompleted[i].patientIC;
 
       // Fetch patient details using patientIC
       const patientDetails = await prisma.patient.findUnique({
@@ -24,16 +24,16 @@ router.get("/", async (req, res) => {
       });
 
       // Add patient details to the current appointment object
-      appointmentsWaiting[i].patientDetails = patientDetails;
+      appointmentsCompleted[i].patientDetails = patientDetails;
     }
 
-    console.log(appointmentsWaiting);
+    console.log(appointmentsCompleted);
 
-    if (appointmentsWaiting.length === 0) {
-      return res.status(404).json({ error: "No waiting appointments found" });
+    if (appointmentsCompleted.length === 0) {
+      return res.status(404).json({ error: "No completed appointments found" });
     }
 
-    return res.json({ appointmentsWaiting });
+    return res.json({ appointmentsCompleted });
   } catch (error) {
     console.error("Error filtering appointments:", error);
     return res.status(500).json({ error: "Internal Server Error" });

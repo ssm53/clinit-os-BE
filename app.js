@@ -10,6 +10,7 @@ import authUserRouter from "./src/controllers/authUser.controllers.js";
 import registerPatientsRouter from "./src/controllers/registerPatients.controllers.js";
 import allPatientsRouter from "./src/controllers/allPatients.controllers.js";
 import newPatientAppointmentRouter from "./src/controllers/newPatientAppointment.controllers.js";
+import newPatientAppointmentBookingRouter from "./src/controllers/newPatientAppointmentBooking.controllers.js";
 import appointmentBookingTodayRouter from "./src/controllers/appointmentBookingToday.controllers.js";
 import appointmentWaitingRouter from "./src/controllers/appointmentWaiting.controllers.js";
 import appointmentDispensaryRouter from "./src/controllers/appointmentDispensary.controllers.js";
@@ -20,6 +21,8 @@ import getNeedRestockMeds from "./src/controllers/getNeedRestockMedicine.control
 import getFollowUpDetailsRouter from "./src/controllers/getFollowUpDetails.controllers.js";
 import existingPatientAppointmentRouter from "./src/controllers/existingPatientAppointment.constrollers.js";
 import existingPatientAppointmentBookingRouter from "./src/controllers/existingPatientAppointmentBooking.controllers.js";
+import queueRouter from "./src/controllers/queue.controllers.js";
+import appointmentCompletedRouter from "./src/controllers/appointmentCompleted.controllers.js";
 import { validateEditPatientDetails } from "./src/validators/validateEditPatientDetails.js";
 
 const app = express();
@@ -44,8 +47,11 @@ app.use(
   "/existing-patient-appointment-booking",
   existingPatientAppointmentBookingRouter
 );
-//START OF ENDPOINTS
+app.use("/new-patient-appointment-booking", newPatientAppointmentBookingRouter);
+app.use("/queue", queueRouter);
+app.use("/appointment-completed", appointmentCompletedRouter);
 
+//START OF ENDPOINTS
 // filter patients end point
 app.get("/filtered-patients/:patientIC", async (req, res) => {
   const patientIC = req.params.patientIC;
@@ -881,6 +887,30 @@ app.get("/letter-details/:appointmentID", async (req, res) => {
   } catch (error) {
     console.error("Error doing letter:", error);
     return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// change appointment from Booking to Waiting
+app.post("/click-arrived/:appointmentID", async (req, res) => {
+  try {
+    const appointmentID = parseInt(req.params.appointmentID); // Convert to integer
+    console.log(appointmentID);
+
+    // Update the existing appointment with letter details
+    const bookingToWaiting = await prisma.appointment.update({
+      where: {
+        id: appointmentID,
+      },
+      data: {
+        status: "Waiting",
+      },
+    });
+    return res.status(200).json({
+      bookingToWaiting,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Cant change status" });
   }
 });
 

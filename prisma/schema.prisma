@@ -34,32 +34,32 @@ model Patient {
 model Appointment {
   id       Int     @id @default(autoincrement())
   specificpatient Patient @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
-  patientIC String    
-  reason       String?
-  date DateTime @default(now())
-  doctor  String @default("null")
-  status String @default("waiting")
-  arrivalTime DateTime @default(now())
-  consultStartTime DateTime @default(now())
-  waitingTime DateTime? 
-  consultEndTime DateTime @default(now())
-  documents String @default("null")
-  notes String @default("null")
-  medName1 String @default("null")
+  patientIC String @default("null")    
+  reason       String? @default("null")   
+  date DateTime
+  doctor  String @default("null")   
+  status String? @default("null")   
+  arrivalTime DateTime? @default(now()) 
+  consultStartTime DateTime? @default(now()) 
+  waitingTime Float? @default(0) 
+  consultEndTime DateTime? @default(now()) 
+  documents String @default("null")   
+  notes String @default("null")   
+  medName1 String @default("null")   
   quantity1 Int @default(0)
-  notes1 String @default("null")
-  medName2 String @default("null")
-  quantity2 Int @default(0)
-  amount Int @default(0)
-  notes2 String @default("null")
-  followUpReason String @default("null")
-  followUpDate DateTime @default(now())
-  mcStart DateTime @default(now())
-  mcEnd DateTime @default(now())
-  employer String?
-  mcReason String?
-  letterDate DateTime @default(now())
-  letterContent String?
+  notes1 String @default("null")   
+  medName2 String @default("null")   
+  quantity2 Int @default(0)   
+  amount Int @default(0)   
+  notes2 String @default("null")   
+  followUpReason String @default("null")   
+  followUpDate DateTime? @default(now())   
+  mcStart DateTime? @default(now())   
+  mcEnd DateTime? @default(now()) 
+  employer String? @default("null")
+  mcReason String? @default("null")
+  letterDate DateTime? @default(now()) 
+  letterContent String? @default("null")
   cashRevenue CashRevenue[]
   MC MC[]
 }

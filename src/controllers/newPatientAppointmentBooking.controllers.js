@@ -38,7 +38,7 @@ router.post("/", async (req, res) => {
         reason: data.reason,
         patientIC: data.IC,
         doctor: data.doctor,
-        status: "Waiting",
+        status: "Booking",
       },
     });
 

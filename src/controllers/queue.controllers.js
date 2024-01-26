@@ -8,7 +8,7 @@ router.get("/", async (req, res) => {
     const appointmentsWaiting = await prisma.appointment.findMany({
       where: {
         status: {
-          in: ["waiting", "Waiting"],
+          in: ["waiting", "Waiting", "serving", "Serving"],
         },
       },
     });
