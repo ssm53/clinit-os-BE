@@ -23,6 +23,7 @@ import existingPatientAppointmentRouter from "./src/controllers/existingPatientA
 import existingPatientAppointmentBookingRouter from "./src/controllers/existingPatientAppointmentBooking.controllers.js";
 import queueRouter from "./src/controllers/queue.controllers.js";
 import appointmentCompletedRouter from "./src/controllers/appointmentCompleted.controllers.js";
+import getAllMedicineRouter from "./src/controllers/getAllMedicine.controllers.js";
 import { validateEditPatientDetails } from "./src/validators/validateEditPatientDetails.js";
 
 const app = express();
@@ -50,6 +51,7 @@ app.use(
 app.use("/new-patient-appointment-booking", newPatientAppointmentBookingRouter);
 app.use("/queue", queueRouter);
 app.use("/appointment-completed", appointmentCompletedRouter);
+app.use("/get-all-medicine", getAllMedicineRouter);
 
 //START OF ENDPOINTS
 // filter patients end point
@@ -708,14 +710,13 @@ app.patch("/edit-treatment-plan/:id", async (req, res) => {
 });
 
 // delete medicine endpoint
-app.delete("/delete-medicine/:medicineToDel", async (req, res) => {
+app.delete("/delete-medicine/:medicineID", async (req, res) => {
   try {
-    const medicineToDel = req.params.medicineToDel;
+    const medicineToDel = parseInt(req.params.medicineID);
 
-    // Delete the image from the database
     await prisma.medicine.delete({
       where: {
-        medicine: medicineToDel,
+        id: medicineToDel,
       },
     });
 
@@ -1039,6 +1040,36 @@ app.patch("/edit-completed-appointment/:ID", async (req, res) => {
     return res
       .status(200)
       .json({ message: "Appointment updated successfully", updatedAppt });
+  } catch (error) {
+    // Handle errors and return an error response if needed
+    console.error("Error updating details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// edit medicine (not restock)
+app.patch("/edit-medicine/:medicineID", async (req, res) => {
+  const ID = parseInt(req.params.medicineID);
+  const data = req.body; // Assuming your request body contains the updated data
+
+  try {
+    // Use Prisma to update the seller's details
+    const updatedMeds = await prisma.medicine.update({
+      where: {
+        id: medicineID,
+      },
+
+      data: {
+        medicine: data.medicine,
+        quantity: data.quantity,
+        price: data.price,
+      },
+    });
+
+    // Return a success response
+    return res
+      .status(200)
+      .json({ message: "Meds updated successfully", updatedMeds });
   } catch (error) {
     // Handle errors and return an error response if needed
     console.error("Error updating details:", error);
