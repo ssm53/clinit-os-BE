@@ -20,10 +20,6 @@ router.get("/", async (req, res) => {
     appointmentsAll[i].patientDetails = patientDetails;
   }
 
-  if (appointmentsAll.length === 0) {
-    return res.status(404).json({ error: "No waiting appointments found" });
-  }
-
   return res.json({ appointmentsAll });
 });
 

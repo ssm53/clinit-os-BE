@@ -34,9 +34,8 @@ router.get("/", async (req, res) => {
       appointmentsBookingToday[i].patientDetails = patientDetails;
     }
 
-    if (appointmentsBookingToday.length === 0) {
-      return res.status(404).json({ error: "No appointments today yet" });
-    }
+    console.log(appointmentsBookingToday);
+    console.log("hello hello");
 
     return res.json({ appointmentsBookingToday });
   } catch (error) {

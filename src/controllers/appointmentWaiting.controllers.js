@@ -29,10 +29,6 @@ router.get("/", async (req, res) => {
 
     console.log(appointmentsWaiting);
 
-    if (appointmentsWaiting.length === 0) {
-      return res.status(404).json({ error: "No waiting appointments found" });
-    }
-
     return res.json({ appointmentsWaiting });
   } catch (error) {
     console.error("Error filtering appointments:", error);

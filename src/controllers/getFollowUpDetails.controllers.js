@@ -21,12 +21,6 @@ router.get("/", async (req, res) => {
       },
     });
 
-    if (followUpDetails.length === 0) {
-      return res.status(404).json({
-        error: "No appointments found within the specified date range",
-      });
-    }
-
     console.log(followUpDetails);
 
     // Iterate over each appointment and fetch patient details

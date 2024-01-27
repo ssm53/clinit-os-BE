@@ -914,4 +914,50 @@ app.post("/click-arrived/:appointmentID", async (req, res) => {
   }
 });
 
+// here i want to do an endpoint to update patiend details
+app.patch("/edit-completed-appointment/:ID", async (req, res) => {
+  const ID = parseInt(req.params.ID);
+  const data = req.body; // Assuming your request body contains the updated data
+
+  // const validationErrors = validateEditPatientDetails(data);
+  // console.log(validationErrors);
+
+  // if (Object.keys(validationErrors).length != 0)
+  //   return res.status(400).send({
+  //     error: validationErrors,
+  //   });
+
+  try {
+    // Use Prisma to update the seller's details
+    const updatedAppt = await prisma.appointment.update({
+      where: {
+        id: ID,
+      },
+
+      data: {
+        reason: data.reason,
+        doctor: data.doctor,
+        notes: data.notes,
+        documents: data.documents,
+        medName1: data.medName1,
+        medName2: data.medName2,
+        quantity1: data.quantity1,
+        quantity2: data.quantity2,
+        notes1: data.notes1,
+        notes2: data.notes2,
+        amount: data.amount,
+      },
+    });
+
+    // Return a success response
+    return res
+      .status(200)
+      .json({ message: "Appointment updated successfully", updatedAppt });
+  } catch (error) {
+    // Handle errors and return an error response if needed
+    console.error("Error updating details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default app;
