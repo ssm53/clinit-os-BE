@@ -252,35 +252,80 @@ const subtractMedicine = async (medicineName, quantity) => {
   }
 };
 
-// add treatment plan to appointment table and update inventory of meds according to treatment plan
+// // add treatment plan to appointment table and update inventory of meds according to treatment plan
+// app.post("/add-treatment-plan/:appointmentID", async (req, res) => {
+//   try {
+//     const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
+//     const data = req.body;
+
+//     // Update medicine fields the appointment table
+//     const treatmentPlan = await prisma.appointment.update({
+//       where: { id: appointmentID },
+//       data: {
+//         medName1: data.meds1,
+//         quantity1: data.quantity1,
+//         notes1: data.notes1,
+//         medName2: data.meds2,
+//         quantity2: data.quantity2,
+//         notes2: data.notes2,
+//       },
+//     });
+
+//     // Subtract medicine quantities
+//     const subtractedMeds1 = await subtractMedicine(data.meds1, data.quantity1);
+//     const subtractedMeds2 = await subtractMedicine(data.meds2, data.quantity2);
+
+//     // Check if subtraction was successful
+//     if (!subtractedMeds1 || !subtractedMeds2) {
+//       // Send a status back of 401 if there is not enough medicine
+//       return res
+//         .status(401)
+//         .json({ error: "Not enough medicine for the treatment plan" });
+//     }
+
+//     return res.status(200).json({
+//       treatmentPlan,
+//     });
+//   } catch (error) {
+//     console.error("Error:", error);
+//     return res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
+
 app.post("/add-treatment-plan/:appointmentID", async (req, res) => {
   try {
-    const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
+    const appointmentID = parseInt(req.params.appointmentID, 10);
     const data = req.body;
 
-    // Update medicine fields the appointment table
+    // Initialize an object to hold the treatment plan data
+    const treatmentPlanData = {};
+
+    // Iterate over the array of medicines and update the treatment plan data
+    data.forEach((medicine, index) => {
+      treatmentPlanData[`medName${index + 1}`] = medicine.meds;
+      treatmentPlanData[`quantity${index + 1}`] = medicine.quantity;
+      treatmentPlanData[`notes${index + 1}`] = medicine.notes;
+    });
+
+    // Update medicine fields in the appointment table
     const treatmentPlan = await prisma.appointment.update({
       where: { id: appointmentID },
-      data: {
-        medName1: data.meds1,
-        quantity1: data.quantity1,
-        notes1: data.notes1,
-        medName2: data.meds2,
-        quantity2: data.quantity2,
-        notes2: data.notes2,
-      },
+      data: treatmentPlanData,
     });
 
     // Subtract medicine quantities
-    const subtractedMeds1 = await subtractMedicine(data.meds1, data.quantity1);
-    const subtractedMeds2 = await subtractMedicine(data.meds2, data.quantity2);
+    for (const medicine of data) {
+      const subtractedMeds = await subtractMedicine(
+        medicine.meds,
+        medicine.quantity
+      );
 
-    // Check if subtraction was successful
-    if (!subtractedMeds1 || !subtractedMeds2) {
-      // Send a status back of 401 if there is not enough medicine
-      return res
-        .status(401)
-        .json({ error: "Not enough medicine for the treatment plan" });
+      // Check if subtraction was successful
+      if (!subtractedMeds) {
+        return res
+          .status(401)
+          .json({ error: "Not enough medicine for the treatment plan" });
+      }
     }
 
     return res.status(200).json({
@@ -681,28 +726,69 @@ app.delete("/delete-medicine/:medicineToDel", async (req, res) => {
   }
 });
 
-// here aim is to update the appointment field with followUpReason and followUpDate
-app.patch("/add-follow-up/:appointmentID", async (req, res) => {
+// // here aim is to update the appointment field with followUpReason and followUpDate
+// app.patch("/add-follow-up/:appointmentID", async (req, res) => {
+//   const id = parseInt(req.params.appointmentID);
+//   const data = req.body; // Assuming your request body contains the updated data
+
+//   try {
+//     // Use Prisma to update the seller's details
+//     const addFollowUp = await prisma.appointment.update({
+//       where: {
+//         id: id,
+//       },
+//       // name, IC, age, gender, email, contact, race
+//       data: {
+//         followUpReason: data.followUpReason,
+//         followUpDate: data.followUpDate,
+//       },
+//     });
+
+//     // Return a success response
+//     return res
+//       .status(200)
+//       .json({ message: "Follow up deets updated successfully", addFollowUp });
+//   } catch (error) {
+//     // Handle errors and return an error response if needed
+//     console.error("Error adding follow up:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+app.post("/add-follow-up/:appointmentID", async (req, res) => {
   const id = parseInt(req.params.appointmentID);
   const data = req.body; // Assuming your request body contains the updated data
 
   try {
-    // Use Prisma to update the seller's details
-    const addFollowUp = await prisma.appointment.update({
-      where: {
-        id: id,
-      },
-      // name, IC, age, gender, email, contact, race
+    // Use Prisma to get details from this appt where id in the appointment table = id. from that appt table, i specifically
+    // want to get only the patientIC field.
+
+    // then once that is done I want to create a new appointment, and add these details in there where ic: patientIC we got from above, reason: data.followUpReason, date: followUpDate
+
+    // Use Prisma to get details from the existing appointment where id in the appointment table = id.
+    const existingAppointment = await prisma.appointment.findUnique({
+      where: { id },
+      select: { patientIC: true, date: true }, // Select only necessary fields
+    });
+
+    if (!existingAppointment) {
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+
+    // Create a new follow-up appointment
+    const followUpAppointment = await prisma.appointment.create({
       data: {
-        followUpReason: data.followUpReason,
-        followUpDate: data.followUpDate,
+        specificpatient: { connect: { IC: existingAppointment.patientIC } },
+        reason: data.followUpReason,
+        date: DateTime.fromISO(data.followUpDate).toJSDate(),
+        status: "Booking",
       },
     });
 
-    // Return a success response
-    return res
-      .status(200)
-      .json({ message: "Follow up deets updated successfully", addFollowUp });
+    return res.status(200).json({
+      message: "Follow-up appointment created successfully",
+      followUpAppointment,
+    });
   } catch (error) {
     // Handle errors and return an error response if needed
     console.error("Error adding follow up:", error);
