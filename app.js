@@ -5,6 +5,8 @@ import cors from "cors"; // Import the cors middleware
 import { DateTime } from "luxon"; // Import luxon library
 import fs from "fs"; // generating PDF
 import PDFDocument from "./pdfkit-tables.js"; // generating PDF
+import multer from "multer"; // for file upload/storing
+import { v4 as uuidv4 } from "uuid"; //for file upload/storing
 import usersRouter from "./src/controllers/users.controllers.js";
 import authUserRouter from "./src/controllers/authUser.controllers.js";
 import registerPatientsRouter from "./src/controllers/registerPatients.controllers.js";
@@ -25,6 +27,7 @@ import queueRouter from "./src/controllers/queue.controllers.js";
 import appointmentCompletedRouter from "./src/controllers/appointmentCompleted.controllers.js";
 import getAllMedicineRouter from "./src/controllers/getAllMedicine.controllers.js";
 import { validateEditPatientDetails } from "./src/validators/validateEditPatientDetails.js";
+import { s3Uploadv3 } from "./s3-service.js"; // aws upload
 
 const app = express();
 app.use(morgan("combined"));
@@ -52,6 +55,10 @@ app.use("/new-patient-appointment-booking", newPatientAppointmentBookingRouter);
 app.use("/queue", queueRouter);
 app.use("/appointment-completed", appointmentCompletedRouter);
 app.use("/get-all-medicine", getAllMedicineRouter);
+
+// .env stuff
+import { config } from "dotenv";
+config();
 
 //START OF ENDPOINTS
 // filter patients end point
@@ -152,12 +159,12 @@ app.post("/start-consultation/:appointmentID", async (req, res) => {
     const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
 
     const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
-    console.log("Current time in Malaysia:", malaysiaTime.toISO());
+    const adjustedTime = malaysiaTime.plus({ hours: 8 });
 
     // Update consult_start_time field in the appointment table
     const consultStartTime = await prisma.appointment.update({
       where: { id: appointmentID },
-      data: { consultStartTime: malaysiaTime },
+      data: { consultStartTime: adjustedTime },
     });
 
     // calc for waiting time
@@ -197,12 +204,12 @@ app.post("/end-consultation/:appointmentID", async (req, res) => {
     const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
 
     const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
-    console.log("Current time in Malaysia:", malaysiaTime.toISO());
+    const adjustedTime = malaysiaTime.plus({ hours: 8 });
 
     // Update consult_end_time field in the appointment table
     const consultEndTime = await prisma.appointment.update({
       where: { id: appointmentID },
-      data: { consultEndTime: malaysiaTime },
+      data: { consultEndTime: adjustedTime },
     });
 
     // Update status field to "dispensary"
@@ -1074,6 +1081,103 @@ app.patch("/edit-medicine/:medicineID", async (req, res) => {
     // Handle errors and return an error response if needed
     console.error("Error updating details:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// NOW  DOING UPLOADS
+
+// single file upload
+// set up middleware for uplaod files
+// dest is where we want the files to be in our directory
+// const upload = multer({ dest: "uploads/" });
+// app.post("/upload", upload.single("file"), (req, res) => {
+//   res.json({ status: "success" });
+// });
+
+// multiple file upload
+// the '2' in our middleware is to limit the no of files that can be uploaded at once
+// const upload = multer({ dest: "uploads/" });
+// app.post("/upload", upload.array("file", 2), (req, res) => {
+//   res.json({ status: "success" });
+// });
+
+// // multiple fields upload - can specify which type of upload is for which e.g. profle pic, resume
+// const upload = multer({ dest: "uploads/" });
+// const multiUpload = upload.fields([
+//   { name: "avatar", maxCount: 1 },
+//   { name: "resume", maxCount: 1 },
+// ]);
+// app.post("/upload", multiUpload, (req, res) => {
+//   console.log(req.files); // this shows the diff properties each uploaded file has
+//   res.json({ status: "success" });
+// });
+
+// Custom file name, limit type of file to be uploaded, limit size, and limit no of files to upload
+
+// //before AWS
+// const storage = multer.diskStorage({
+//   destination: (req, res, cb) => {
+//     // where we wan to send the files to
+//     cb(null, "uploads/");
+//   },
+//   filename: (req, file, cb) => {
+//     const { originalname } = file;
+//     console.log(file);
+//     cb(null, `${uuidv4()}-${originalname}`); // here we wnat a random id, then orginal name e.g. uuid-originalName
+//   },
+// });
+
+// afterAWS - note our .env.development and s3-servicejs file
+const storage = multer.memoryStorage();
+
+// this function basically checks if the uploaded file is of the correct type. e.g. application/pdf or image/jpeg
+// then just like storage, we put it into our middleware upload
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.split("/")[0] === "image") {
+    cb(null, true);
+  } else {
+    cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
+  }
+};
+
+const upload = multer({ storage, fileFilter, limits: 100, files: 2 }); // note that instead f doing dest: , we just use storage there. also note that the limits: 1000000 limits the size of the file which can be uploaded in bytes.. files: 2 states the no of files which can be uploaded
+
+// // version 2 aws sdk
+// app.post("/upload", upload.array("file"), async (req, res) => {
+//   try {
+//     const results = await s3Uploadv2(files);
+//     console.log(results);
+//     res.json({ status: "success" });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
+
+// version 3 aws sdk
+app.post("/upload", upload.array("file"), async (req, res) => {
+  try {
+    const results = await s3Uploadv3(req.files);
+    console.log(results);
+    res.json({ status: "success" });
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// this is for error handling - basically if error code is x, then we send message to user. this app.use here is inbuilt by express. now to get limit_file_size, we must press control on MulterError, and it'l take us to the docs. then there we can see the diff error codes.
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code == "LIMIT_FILE_SIZE") {
+      res.status(400).json({ message: "File is too large " });
+    }
+
+    if (error.code == "LIMIT_FILE_COUNT") {
+      res.status(400).json({ message: "File limit reached" });
+    }
+
+    if (error.code == "LIMIT_UNEXPECTED_FILE") {
+      res.status(400).json({ message: "File must be of image type" });
+    }
   }
 });
 

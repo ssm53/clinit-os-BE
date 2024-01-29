@@ -7,6 +7,9 @@ import { validateNewPatientAppt } from "../validators/newPatientAppt.js";
 
 const router = express.Router();
 
+const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
+const adjustedTime = malaysiaTime.plus({ hours: 8 });
+
 router.post("/", async (req, res) => {
   const data = req.body;
 
@@ -34,12 +37,12 @@ router.post("/", async (req, res) => {
     // make appt in appt table
     const appointment = await prisma.appointment.create({
       data: {
-        date: malaysiaTime.toJSDate(), // Set the date to the current date in Malaysia
+        date: adjustedTime, // Set the date to the current date in Malaysia
         reason: data.reason,
         patientIC: data.IC,
         doctor: data.doctor,
         status: "Waiting",
-        arrivalTime: malaysiaTime.toJSDate(), // Convert to JavaScript Date object
+        arrivalTime: adjustedTime,
       },
     });
 

@@ -41,6 +41,7 @@ router.post("/", async (req, res) => {
         status: "Booking",
       },
     });
+    console.log(appointment.date);
 
     return res.status(200).json({ appointment: appointment, patient: patient });
   } catch (error) {
