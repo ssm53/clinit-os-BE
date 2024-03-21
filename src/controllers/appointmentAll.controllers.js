@@ -4,7 +4,11 @@ import prisma from "../utils/prisma.js";
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const appointmentsAll = await prisma.appointment.findMany();
+  const appointmentsAll = await prisma.appointment.findMany({
+    orderBy: {
+      arrivalTime: "desc", // Order by arrivalTime in descending order
+    },
+  });
 
   // Iterate through appointmentsToday
   for (let i = 0; i < appointmentsAll.length; i++) {

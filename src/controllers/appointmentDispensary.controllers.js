@@ -9,6 +9,9 @@ router.get("/", async (req, res) => {
       where: {
         status: "dispensary", // Filter appointments where the status is "waiting"
       },
+      orderBy: {
+        arrivalTime: "desc", // Order by arrivalTime in descending order
+      },
     });
 
     // Iterate through appointmentsToday

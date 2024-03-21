@@ -21,7 +21,7 @@ import addMedicineRouter from "./src/controllers/addMedicine.controllers.js";
 import addExistingMedicineRouter from "./src/controllers/addExistingMedicine.controllers.js";
 import appointmentAllRouter from "./src/controllers/appointmentAll.controllers.js";
 import getNeedRestockMeds from "./src/controllers/getNeedRestockMedicine.controllers.js";
-import getFollowUpDetailsRouter from "./src/controllers/getFollowUpDetails.controllers.js";
+import appointmentBookingRouter from "./src/controllers/appointmentBooking.controllers.js";
 import existingPatientAppointmentRouter from "./src/controllers/existingPatientAppointment.constrollers.js";
 import existingPatientAppointmentBookingRouter from "./src/controllers/existingPatientAppointmentBooking.controllers.js";
 import queueRouter from "./src/controllers/queue.controllers.js";
@@ -52,7 +52,7 @@ app.use("/add-medicine", addMedicineRouter);
 app.use("/add-existing-medicine", addExistingMedicineRouter);
 app.use("/appointment-all", appointmentAllRouter);
 app.use("/get-need-restock-medicine", getNeedRestockMeds);
-app.use("/get-follow-up-details", getFollowUpDetailsRouter);
+app.use("/appointment-booking", appointmentBookingRouter);
 app.use("/existing-patient-appointment", existingPatientAppointmentRouter);
 app.use(
   "/existing-patient-appointment-booking",
@@ -1206,6 +1206,24 @@ app.get("/get-documents/:patientIC", async (req, res) => {
     res
       .status(500)
       .send({ error: "An error occurred while fetching documents." });
+  }
+});
+
+// delete medicine endpoint
+app.delete("/cancel-appointment/:appointmentID", async (req, res) => {
+  try {
+    const apptToDel = parseInt(req.params.appointmentID);
+
+    await prisma.appointment.delete({
+      where: {
+        id: apptToDel,
+      },
+    });
+
+    return res.status(204).send(); // Successful deletion (status 204)
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

@@ -11,6 +11,9 @@ router.get("/", async (req, res) => {
           in: ["waiting", "Waiting"],
         },
       },
+      orderBy: {
+        arrivalTime: "desc", // Order by arrivalTime in descending order
+      },
     });
 
     // Iterate through appointmentsToday
