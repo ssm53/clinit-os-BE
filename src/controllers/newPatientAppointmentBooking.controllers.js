@@ -18,7 +18,6 @@ router.post("/", async (req, res) => {
       error: validationErrors,
     });
   try {
-    const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
     // add new patient to patient table
     const patient = await prisma.patient.create({
       data: {
@@ -45,8 +44,19 @@ router.post("/", async (req, res) => {
 
     return res.status(200).json({ appointment: appointment, patient: patient });
   } catch (error) {
-    console.error("Error creating appointment:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const formattedError = {};
+      formattedError[`${error.meta.target[0]}`] = "already taken";
+      formattedError[`${error.meta.target[1]}`] = "already taken";
+
+      return res.status(500).send({
+        error: formattedError,
+      }); // friendly error handling
+    }
+    throw error;
   }
 });
 

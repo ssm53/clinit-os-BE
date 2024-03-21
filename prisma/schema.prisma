@@ -29,6 +29,7 @@ model Patient {
   appointment Appointment[]
   cashRevenue CashRevenue[]
   MC MC[]
+  Documents Documents[]
 }
 
 model Appointment {
@@ -42,8 +43,7 @@ model Appointment {
   arrivalTime DateTime? @default(now()) 
   consultStartTime DateTime? @default(now()) 
   waitingTime Float? @default(0) 
-  consultEndTime DateTime? @default(now()) 
-  documents String @default("null")   
+  consultEndTime DateTime? @default(now())    
   notes String @default("null")   
   medName1 String @default("null")   
   quantity1 Int @default(0)
@@ -77,6 +77,7 @@ model Appointment {
   letterContent String? @default("null")
   cashRevenue CashRevenue[]
   MC MC[]
+  Documents Documents[]
 }
 
 model Medicine {
@@ -106,5 +107,16 @@ model MC {
   mcEnd DateTime
   employer String?
   reason String?
+}
+
+model Documents {
+  id Int @id @default(autoincrement())
+  appId Appointment @relation(fields: [appointmentID], references: [id])
+  appointmentID Int
+  patic Patient? @relation(fields: [patientIC], references: [IC])
+  patientIC String?
+  name String?
+  caption String?
+  dateAdded DateTime
 }
 	
