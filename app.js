@@ -9,7 +9,9 @@ import PDFDocument from "./pdfkit-tables.js"; // generating PDF
 import multer from "multer"; // for file upload/storing
 // import { v4 as uuidv4 } from "uuid"; //for file upload/storing
 import usersRouter from "./src/controllers/users.controllers.js";
+import doctorsRouter from "./src/controllers/doctors.controllers.js";
 import authUserRouter from "./src/controllers/authUser.controllers.js";
+import authDoctorRouter from "./src/controllers/authDoctor.controllers.js";
 import registerPatientsRouter from "./src/controllers/registerPatients.controllers.js";
 import allPatientsRouter from "./src/controllers/allPatients.controllers.js";
 import newPatientAppointmentRouter from "./src/controllers/newPatientAppointment.controllers.js";
@@ -41,7 +43,9 @@ app.use(morgan("combined"));
 app.use(cors()); // Use the cors middleware to allow cross-origin requests
 app.use(express.json()); // Add this middleware to parse JSON in request bodies
 app.use("/users", usersRouter);
+app.use("/doctors", doctorsRouter);
 app.use("/auth-user", authUserRouter);
+app.use("/auth-doctor", authDoctorRouter);
 app.use("/register-patient", registerPatientsRouter);
 app.use("/all-patients", allPatientsRouter);
 app.use("/new-patient-appointment", newPatientAppointmentRouter);
