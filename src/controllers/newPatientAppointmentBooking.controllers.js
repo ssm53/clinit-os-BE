@@ -44,19 +44,8 @@ router.post("/", async (req, res) => {
 
     return res.status(200).json({ appointment: appointment, patient: patient });
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      const formattedError = {};
-      formattedError[`${error.meta.target[0]}`] = "already taken";
-      formattedError[`${error.meta.target[1]}`] = "already taken";
-
-      return res.status(500).send({
-        error: formattedError,
-      }); // friendly error handling
-    }
-    throw error;
+    console.error("Error registering patients:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

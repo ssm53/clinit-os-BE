@@ -27,12 +27,12 @@ model Doctor {
 model Patient {
   id       Int     @id @default(autoincrement())
   name     String?
-  IC       String @unique
-  age      Int
-  gender   String?
-  email    String  @unique
-  contact  String?
-  race     String?
+  IC       String? @unique @default("null")
+  age      Int @default(0)
+  gender   String? @default("null")
+  email    String  @default("null")
+  contact  String? @default("null")
+  race     String? @default("null")
   appointment Appointment[]
   cashRevenue CashRevenue[]
   Documents Documents[]
@@ -40,8 +40,8 @@ model Patient {
 
 model Appointment {
   id       Int     @id @default(autoincrement())
-  specificpatient Patient @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
-  patientIC String @default("null")    
+  specificpatient Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
+  patientIC String? @default("null")    
   reason       String? @default("null")   
   date DateTime
   doctor  String @default("null")   
@@ -87,9 +87,8 @@ model Appointment {
 
 model Medicine {
   id Int @id @default(autoincrement())
-  medicine String @unique
-  quantity Int
-  price Int
+  medicine String @unique @default("null")
+  quantity Int @default(0)
 }
 
 model CashRevenue {
@@ -97,7 +96,7 @@ model CashRevenue {
   appId Appointment @relation(fields: [appointmentID], references: [id]) // Define the foreign key relationship 
   appointmentID Int
   patic Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
-  patientIC String?
+  patientIC String? @default("null")
   amount Int
 }
 
@@ -106,7 +105,7 @@ model Documents {
   appId Appointment @relation(fields: [appointmentID], references: [id])
   appointmentID Int
   patic Patient? @relation(fields: [patientIC], references: [IC])
-  patientIC String?
+  patientIC String? @default("null")
   name String?
   caption String?
   dateAdded DateTime

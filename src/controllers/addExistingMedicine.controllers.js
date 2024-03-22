@@ -13,7 +13,6 @@ router.post("/", async (req, res) => {
       },
       data: {
         quantity: data.quantity,
-        price: data.price,
       },
     });
 

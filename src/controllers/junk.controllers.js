@@ -1,0 +1,113 @@
+// // This is your Prisma schema file,
+// // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model User {
+//   id       Int     @id @default(autoincrement())
+//   name     String?
+//   email    String  @unique
+//   password String?
+// }
+
+// model Doctor {
+//   id       Int     @id @default(autoincrement())
+//   name     String?
+//   email    String  @unique
+//   password String?
+// }
+
+// model Patient {
+//   id       Int     @id @default(autoincrement())
+//   name     String?
+//   IC       String? @unique @default("null")
+//   age      Int
+//   gender   String?
+//   email    String  @unique
+//   contact  Int @default(0)
+//   race     String?
+//   appointment Appointment[]
+//   cashRevenue CashRevenue[]
+//   Documents Documents[]
+// }
+
+// model Appointment {
+//   id       Int     @id @default(autoincrement())
+//   specificpatient Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship
+//   patientIC String? @default("null")
+//   reason       String? @default("null")
+//   date DateTime
+//   doctor  String @default("null")
+//   status String? @default("null")
+//   arrivalTime DateTime? @default(now())
+//   consultStartTime DateTime? @default(now())
+//   waitingTime Float? @default(0)
+//   consultEndTime DateTime? @default(now())
+//   notes String @default("null")
+//   medName1 String @default("null")
+//   quantity1 Int @default(0)
+//   notes1 String @default("null")
+//   medName2 String @default("null")
+//   quantity2 Int @default(0)
+//   amount Int @default(0)
+//   notes2 String @default("null")
+//    medName3 String @default("null")
+//   quantity3 Int @default(0)
+//   notes3 String @default("null")
+//    medName4 String @default("null")
+//   quantity4 Int @default(0)
+//   notes4 String @default("null")
+//    medName5 String @default("null")
+//   quantity5 Int @default(0)
+//   notes5 String @default("null")
+//    medName6 String @default("null")
+//   quantity6 Int @default(0)
+//   notes6 String @default("null")
+//    medName7 String @default("null")
+//   quantity7 Int @default(0)
+//   notes7 String @default("null")
+//   followUpReason String @default("null")
+//   followUpDate DateTime? @default(now())
+//   mcStart DateTime? @default(now())
+//   mcEnd DateTime? @default(now())
+//   employer String? @default("null")
+//   mcReason String? @default("null")
+//   letterDate DateTime? @default(now())
+//   letterContent String? @default("null")
+//   cashRevenue CashRevenue[]
+//   Documents Documents[]
+// }
+
+// model Medicine {
+//   id Int @id @default(autoincrement())
+//   medicine String @unique
+//   quantity Int
+//   price Int
+// }
+
+// model CashRevenue {
+//   id Int @id @default(autoincrement())
+//   appId Appointment @relation(fields: [appointmentID], references: [id]) // Define the foreign key relationship
+//   appointmentID Int
+//   patic Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship
+//   patientIC String? @default("null")
+//   amount Int
+// }
+
+// model Documents {
+//   id Int @id @default(autoincrement())
+//   appId Appointment @relation(fields: [appointmentID], references: [id])
+//   appointmentID Int
+//   patic Patient? @relation(fields: [patientIC], references: [IC])
+//   patientIC String? @default("null")
+//   name String?
+//   caption String?
+//   dateAdded DateTime
+// }

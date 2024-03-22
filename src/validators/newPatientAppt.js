@@ -10,35 +10,17 @@ export function validateNewPatientAppt(input) {
     input["IC"].length !== 12 ||
     !/^[0-9]{12}$/.test(input["IC"])
   ) {
-    validationErrors["IC"] = "Invalid IC format";
-  }
-
-  if (!("age" in input) || isNaN(input["age"]) || input["age"] <= 0) {
-    validationErrors["age"] = "Invalid age";
-  }
-
-  if (!("gender" in input) || input["gender"].length === 0) {
-    validationErrors["gender"] = "Gender cannot be blank";
-  }
-
-  if (!("email" in input) || input["email"].length === 0) {
-    validationErrors["email"] = "Email cannot be blank";
+    validationErrors["IC"] =
+      "Invalid IC format. Make sure no '-'. Correct format example: 960916125792";
   }
 
   if (!("contact" in input) || input["contact"].length === 0) {
-    validationErrors["contact"] = "Contact number cannot be blank";
-  }
-
-  if (!("race" in input) || input["race"].length === 0) {
-    validationErrors["race"] = "Race cannot be blank";
+    validationErrors["contact"] =
+      "Contact number should not be blank. Contact number must be in number format. E.g. 0138920202. If you want to add it to whatsapp, input country code at the front ";
   }
 
   if (!("reason" in input) || input["reason"].length === 0) {
-    validationErrors["reason"] = "Reason cannot be blank";
-  }
-
-  if (!("doctor" in input) || input["doctor"].length === 0) {
-    validationErrors["doctor"] = "Doctor cannot be blank";
+    validationErrors["reason"] = "Reason should not be blank";
   }
 
   return validationErrors;

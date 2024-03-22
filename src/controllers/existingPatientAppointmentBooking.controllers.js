@@ -3,11 +3,20 @@ import { Prisma } from "@prisma/client";
 import prisma from "../utils/prisma.js";
 import { filter } from "../utils/common.js";
 import { DateTime } from "luxon"; // Import luxon library
+import { validateExistingPatientAppt } from "../validators/existingPatientAppt.js";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   const data = req.body;
+
+  const validationErrors = validateExistingPatientAppt(data);
+  console.log(validationErrors);
+
+  if (Object.keys(validationErrors).length != 0)
+    return res.status(400).send({
+      error: validationErrors,
+    });
 
   try {
     // make appt in appt table

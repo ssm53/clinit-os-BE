@@ -30,6 +30,7 @@ import queueRouter from "./src/controllers/queue.controllers.js";
 import appointmentCompletedRouter from "./src/controllers/appointmentCompleted.controllers.js";
 import getAllMedicineRouter from "./src/controllers/getAllMedicine.controllers.js";
 import { validateEditPatientDetails } from "./src/validators/validateEditPatientDetails.js";
+import { validateGetPatientAppt } from "./src/validators/getPatient.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -91,6 +92,13 @@ const randomImageName = (bytes = 32) =>
 // filter patients end point
 app.get("/filtered-patients/:patientIC", async (req, res) => {
   const patientIC = req.params.patientIC;
+  const validationErrors = validateGetPatientAppt(patientIC);
+  console.log(validationErrors);
+
+  if (Object.keys(validationErrors).length != 0)
+    return res.status(400).send({
+      error: validationErrors,
+    });
   try {
     const filteredPatients = await prisma.patient.findMany({
       where: {
@@ -1037,6 +1045,8 @@ app.get("/letter-details/:appointmentID", async (req, res) => {
 
 // change appointment from Booking to Waiting
 app.post("/click-arrived/:appointmentID", async (req, res) => {
+  const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
+  const adjustedTime = malaysiaTime.plus({ hours: 8 });
   try {
     const appointmentID = parseInt(req.params.appointmentID); // Convert to integer
     console.log(appointmentID);
@@ -1048,6 +1058,8 @@ app.post("/click-arrived/:appointmentID", async (req, res) => {
       },
       data: {
         status: "Waiting",
+        date: adjustedTime,
+        arrivalTime: adjustedTime,
       },
     });
     return res.status(200).json({
@@ -1107,20 +1119,28 @@ app.patch("/edit-completed-appointment/:ID", async (req, res) => {
 
 // edit medicine (not restock)
 app.patch("/edit-medicine/:medicineID", async (req, res) => {
-  const ID = parseInt(req.params.medicineID);
+  const medicineID = parseInt(req.params.medicineID);
   const data = req.body; // Assuming your request body contains the updated data
 
   try {
-    // Use Prisma to update the seller's details
+    // Retrieve current medicine details
+    const currentMedicine = await prisma.medicine.findUnique({
+      where: {
+        id: medicineID,
+      },
+    });
+
+    // Calculate new quantity
+    const newQuantity = currentMedicine.quantity + data.quantity;
+
+    // Use Prisma to update the medicine's details
     const updatedMeds = await prisma.medicine.update({
       where: {
         id: medicineID,
       },
-
       data: {
         medicine: data.medicine,
-        quantity: data.quantity,
-        price: data.price,
+        quantity: newQuantity,
       },
     });
 

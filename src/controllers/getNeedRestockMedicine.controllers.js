@@ -17,12 +17,6 @@ router.get("/", async (req, res) => {
 
     console.log(restockMeds);
 
-    if (restockMeds.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "No appts found with the specified id" });
-    }
-
     return res.json({ restockMeds });
   } catch (error) {
     console.error("Error finding info:", error);

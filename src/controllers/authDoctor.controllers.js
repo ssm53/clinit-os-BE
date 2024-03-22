@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
       error: "Email address or password not valid",
     });
 
-  const checkPassword = bcrypt.compareSync(data.password, user.password);
+  const checkPassword = bcrypt.compareSync(data.password, doctor.password);
   if (!checkPassword)
     return res.status(401).send({
       error: "Email address or password not valid",
@@ -50,7 +50,7 @@ router.post("/", async (req, res) => {
   // });
 
   const doctorId = doctor.id;
-  return res.json({ doctorAccessToken, userId });
+  return res.json({ doctorAccessToken, doctorId });
 });
 
 export default router;

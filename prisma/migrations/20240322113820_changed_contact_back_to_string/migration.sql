@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Patient" ALTER COLUMN "contact" DROP NOT NULL,
+ALTER COLUMN "contact" SET DEFAULT 'null',
+ALTER COLUMN "contact" SET DATA TYPE TEXT;
