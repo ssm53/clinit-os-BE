@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
       // Fetch patient details using patientIC
       const patientDetails = await prisma.patient.findUnique({
         where: { IC: patientIC },
-        select: { name: true, age: true, gender: true },
+        select: { name: true, age: true, gender: true, IC: true },
       });
 
       // Add patient details to the current appointment object

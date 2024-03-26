@@ -89,6 +89,7 @@ model Medicine {
   id Int @id @default(autoincrement())
   medicine String @unique @default("null")
   quantity Int @default(0)
+  price Int @default(0)
 }
 
 model CashRevenue {

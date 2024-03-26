@@ -14,6 +14,7 @@ router.post("/", async (req, res) => {
       data: {
         medicine: data.name,
         quantity: data.quantity,
+        price: data.price,
       },
     });
 

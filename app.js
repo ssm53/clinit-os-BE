@@ -406,6 +406,11 @@ app.get("/invoice-details/:appointmentID", async (req, res) => {
     const medsDetails = [
       { name: appointment.medName1, quantity: appointment.quantity1 },
       { name: appointment.medName2, quantity: appointment.quantity2 },
+      { name: appointment.medName3, quantity: appointment.quantity3 },
+      { name: appointment.medName4, quantity: appointment.quantity4 },
+      { name: appointment.medName5, quantity: appointment.quantity5 },
+      { name: appointment.medName6, quantity: appointment.quantity6 },
+      { name: appointment.medName7, quantity: appointment.quantity7 },
     ].filter((med) => med.name !== "null" && med.quantity > 0);
 
     // Step 3: Look up the medicine details for each medication
@@ -434,6 +439,7 @@ app.get("/invoice-details/:appointmentID", async (req, res) => {
       (sum, amount) => sum + amount,
       0
     );
+    console.log(appointmentTotalAmount);
 
     // Step 6: Update the 'amount' field in the appointment table
     await prisma.appointment.update({
@@ -1071,52 +1077,6 @@ app.post("/click-arrived/:appointmentID", async (req, res) => {
   }
 });
 
-// here i want to do an endpoint to update patiend details
-app.patch("/edit-completed-appointment/:ID", async (req, res) => {
-  const ID = parseInt(req.params.ID);
-  const data = req.body; // Assuming your request body contains the updated data
-
-  // const validationErrors = validateEditPatientDetails(data);
-  // console.log(validationErrors);
-
-  // if (Object.keys(validationErrors).length != 0)
-  //   return res.status(400).send({
-  //     error: validationErrors,
-  //   });
-
-  try {
-    // Use Prisma to update the seller's details
-    const updatedAppt = await prisma.appointment.update({
-      where: {
-        id: ID,
-      },
-
-      data: {
-        reason: data.reason,
-        doctor: data.doctor,
-        notes: data.notes,
-        documents: data.documents,
-        medName1: data.medName1,
-        medName2: data.medName2,
-        quantity1: data.quantity1,
-        quantity2: data.quantity2,
-        notes1: data.notes1,
-        notes2: data.notes2,
-        amount: data.amount,
-      },
-    });
-
-    // Return a success response
-    return res
-      .status(200)
-      .json({ message: "Appointment updated successfully", updatedAppt });
-  } catch (error) {
-    // Handle errors and return an error response if needed
-    console.error("Error updating details:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 // edit medicine (not restock)
 app.patch("/edit-medicine/:medicineID", async (req, res) => {
   const medicineID = parseInt(req.params.medicineID);
@@ -1250,5 +1210,104 @@ app.delete("/cancel-appointment/:appointmentID", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// delete documents endpoint
+app.delete("/delete-documents/:documentID", async (req, res) => {
+  try {
+    const docToDel = parseInt(req.params.documentID);
+
+    await prisma.documents.delete({
+      where: {
+        id: docToDel,
+      },
+    });
+
+    return res.status(204).send(); // Successful deletion (status 204)
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.patch(
+  "/edit-completed-appointment/:ID",
+  upload.single("file-upload"),
+  async (req, res) => {
+    const ID = parseInt(req.params.ID);
+    const data = req.body; // Assuming your request body contains the updated data
+    const imageName = randomImageName();
+    const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
+    const adjustedTime = malaysiaTime.plus({ hours: 8 });
+    console.log(req.file);
+
+    try {
+      // upload image
+      const params = {
+        Bucket: aws_bucket_name,
+        Key: imageName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      };
+      console.log(req.file);
+      const command = new PutObjectCommand(params);
+      await s3.send(command);
+
+      const upload = await prisma.documents.create({
+        data: {
+          appointmentID: ID,
+          patientIC: data.patientDetails.IC,
+          name: imageName,
+          caption: data.caption,
+          dateAdded: adjustedTime,
+        },
+      });
+
+      // Use Prisma to update the seller's details
+      const updatedAppt = await prisma.appointment.update({
+        where: {
+          id: ID,
+        },
+
+        data: {
+          reason: data.reason,
+          doctor: data.doctor,
+          notes: data.notes,
+          documents: data.documents,
+          medName1: data.med - name1,
+          medName2: data.medName2,
+          medName3: data.medName3,
+          medName4: data.medName4,
+          medName5: data.medName5,
+          medName6: data.medName6,
+          medName7: data.medName7,
+          quantity1: data.quantity1,
+          quantity2: data.quantity2,
+          quantity3: data.quantity3,
+          quantity4: data.quantity4,
+          quantity5: data.quantity5,
+          quantity6: data.quantity6,
+          quantity7: data.quantity7,
+          notes1: data.notes1,
+          notes2: data.notes2,
+          notes3: data.notes3,
+          notes4: data.notes4,
+          notes5: data.notes5,
+          notes6: data.notes6,
+          notes7: data.notes7,
+          amount: data.amount,
+        },
+      });
+
+      // Return a success response
+      return res
+        .status(200)
+        .json({ message: "Appointment updated successfully", updatedAppt });
+    } catch (error) {
+      // Handle errors and return an error response if needed
+      console.error("Error updating details:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
 
 export default app;
