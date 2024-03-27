@@ -40,16 +40,25 @@ router.post("/", async (req, res) => {
         date: adjustedTime, // Set the date to the current date in Malaysia
         reason: data.reason,
         patientIC: data.IC,
-        doctor: data.doctor,
         status: "Waiting",
         arrivalTime: adjustedTime,
       },
     });
 
     return res.status(200).json({ appointment: appointment, patient: patient });
-  } catch (error) {
-    console.error("Error registering patients:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      const formattedError = {};
+      formattedError[`${err.meta.target[0]}`] =
+        "This patient is already registered. Please click 'Exising Patient' button";
+
+      return res.status(500).send({
+        error: formattedError,
+      }); // friendly error handling
+    }
   }
 });
 

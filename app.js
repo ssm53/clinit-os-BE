@@ -263,38 +263,41 @@ app.post("/end-consultation/:appointmentID", async (req, res) => {
   }
 });
 
-// Function to subtract medicine quantities (link to endpoint below)
-const subtractMedicine = async (medicineName, quantity) => {
-  try {
-    // Find the medicine in the Medicine table
-    const medicine = await prisma.medicine.findUnique({
-      where: { medicine: medicineName },
-    });
+// // Function to subtract medicine quantities (link to endpoint below)
+// const subtractMedicine = async (medicineName, quantity) => {
+//   try {
+//     // Find the medicine in the Medicine table
+//     const medicine = await prisma.medicine.findUnique({
+//       where: { medicine: medicineName },
+//     });
 
-    if (!medicine) {
-      console.error(`Medicine not found: ${medicineName}`);
-      return false; // Indicate that medicine was not found
-    }
+//     if (!medicine) {
+//       console.log("hello1");
+//       console.error(`Medicine not found: ${medicineName}`);
+//       return false; // Indicate that medicine was not found
+//     }
 
-    // Check if there is enough quantity
-    if (medicine.quantity < quantity) {
-      return false; // Indicate that there is not enough medicine
-    }
+//     // Check if there is enough quantity
+//     if (medicine.quantity < quantity) {
+//       console.log("hello2");
+//       return false; // Indicate that there is not enough medicine
+//     }
 
-    // Update the quantity field
-    await prisma.medicine.update({
-      where: { id: medicine.id },
-      data: {
-        quantity: Math.max(medicine.quantity - quantity, 0), // Ensure quantity is not negative
-      },
-    });
+//     // Update the quantity field
+//     await prisma.medicine.update({
+//       where: { id: medicine.id },
+//       data: {
+//         quantity: Math.max(medicine.quantity - quantity, 0), // Ensure quantity is not negative
+//       },
+//     });
 
-    return true; // Indicate successful subtraction
-  } catch (error) {
-    console.error("Error subtracting medicine:", error);
-    return false; // Indicate failure due to an error
-  }
-};
+//     return true; // Indicate successful subtraction
+//   } catch (error) {
+//     console.log("hello3");
+//     console.error("Error subtracting medicine:", error);
+//     return false; // Indicate failure due to an error
+//   }
+// };
 
 // // add treatment plan to appointment table and update inventory of meds according to treatment plan
 // app.post("/add-treatment-plan/:appointmentID", async (req, res) => {
@@ -357,20 +360,20 @@ app.post("/add-treatment-plan/:appointmentID", async (req, res) => {
       data: treatmentPlanData,
     });
 
-    // Subtract medicine quantities
-    for (const medicine of data) {
-      const subtractedMeds = await subtractMedicine(
-        medicine.meds,
-        medicine.quantity
-      );
+    // // Subtract medicine quantities
+    // for (const medicine of data) {
+    //   const subtractedMeds = await subtractMedicine(
+    //     medicine.meds,
+    //     medicine.quantity
+    //   );
 
-      // Check if subtraction was successful
-      if (!subtractedMeds) {
-        return res
-          .status(401)
-          .json({ error: "Not enough medicine for the treatment plan" });
-      }
-    }
+    //   // Check if subtraction was successful
+    //   if (!subtractedMeds) {
+    //     return res
+    //       .status(401)
+    //       .json({ error: "Not enough medicine for the treatment plan" });
+    //   }
+    // }
 
     return res.status(200).json({
       treatmentPlan,
@@ -652,23 +655,8 @@ app.patch("/update-patient-details/:ic", async (req, res) => {
       .status(200)
       .json({ message: "Seller details updated successfully", updatedDetails });
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002" &&
-      data.IC != ic &&
-      data.email != oldEmail
-    ) {
-      const formattedError = {};
-      formattedError[`${error.meta.target[0]}`] = "already taken";
-
-      return res.status(500).send({
-        error: formattedError,
-      }); // friendly error handling
-    }
-    throw error;
-    // Handle errors and return an error response if needed
-    console.error("Error updating details:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error editing patient details:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -1238,29 +1226,29 @@ app.patch(
     const imageName = randomImageName();
     const malaysiaTime = DateTime.local().setZone("Asia/Kuala_Lumpur");
     const adjustedTime = malaysiaTime.plus({ hours: 8 });
-    console.log(req.file);
 
     try {
-      // upload image
-      const params = {
-        Bucket: aws_bucket_name,
-        Key: imageName,
-        Body: req.file.buffer,
-        ContentType: req.file.mimetype,
-      };
-      console.log(req.file);
-      const command = new PutObjectCommand(params);
-      await s3.send(command);
+      if (req.file !== undefined) {
+        // upload image
+        const params = {
+          Bucket: aws_bucket_name,
+          Key: imageName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+        };
+        const command = new PutObjectCommand(params);
+        await s3.send(command);
 
-      const upload = await prisma.documents.create({
-        data: {
-          appointmentID: ID,
-          patientIC: data.patientDetails.IC,
-          name: imageName,
-          caption: data.caption,
-          dateAdded: adjustedTime,
-        },
-      });
+        const upload = await prisma.documents.create({
+          data: {
+            appointmentID: ID,
+            patientIC: data.IC,
+            name: imageName,
+            caption: data.caption,
+            dateAdded: adjustedTime,
+          },
+        });
+      }
 
       // Use Prisma to update the seller's details
       const updatedAppt = await prisma.appointment.update({
@@ -1273,20 +1261,20 @@ app.patch(
           doctor: data.doctor,
           notes: data.notes,
           documents: data.documents,
-          medName1: data.med - name1,
+          medName1: data.medName1,
           medName2: data.medName2,
           medName3: data.medName3,
           medName4: data.medName4,
           medName5: data.medName5,
           medName6: data.medName6,
           medName7: data.medName7,
-          quantity1: data.quantity1,
-          quantity2: data.quantity2,
-          quantity3: data.quantity3,
-          quantity4: data.quantity4,
-          quantity5: data.quantity5,
-          quantity6: data.quantity6,
-          quantity7: data.quantity7,
+          quantity1: parseInt(data.quantity1),
+          quantity2: parseInt(data.quantity2),
+          quantity3: parseInt(data.quantity3),
+          quantity4: parseInt(data.quantity4),
+          quantity5: parseInt(data.quantity5),
+          quantity6: parseInt(data.quantity6),
+          quantity7: parseInt(data.quantity7),
           notes1: data.notes1,
           notes2: data.notes2,
           notes3: data.notes3,
@@ -1294,7 +1282,7 @@ app.patch(
           notes5: data.notes5,
           notes6: data.notes6,
           notes7: data.notes7,
-          amount: data.amount,
+          amount: parseInt(data.amount),
         },
       });
 

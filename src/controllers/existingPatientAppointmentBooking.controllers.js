@@ -25,7 +25,6 @@ router.post("/", async (req, res) => {
         date: data.date,
         reason: data.reason,
         patientIC: data.patientIC,
-        doctor: data.doctor,
         status: "Booking",
       },
     });
