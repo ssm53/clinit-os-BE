@@ -29,6 +29,7 @@ import existingPatientAppointmentBookingRouter from "./src/controllers/existingP
 import queueRouter from "./src/controllers/queue.controllers.js";
 import appointmentCompletedRouter from "./src/controllers/appointmentCompleted.controllers.js";
 import getAllMedicineRouter from "./src/controllers/getAllMedicine.controllers.js";
+import getAllRevenueRouter from "./src/controllers/getAllRevenue.controllers.js";
 import { validateEditPatientDetails } from "./src/validators/validateEditPatientDetails.js";
 import { validateGetPatientAppt } from "./src/validators/getPatient.js";
 import {
@@ -67,6 +68,7 @@ app.use("/new-patient-appointment-booking", newPatientAppointmentBookingRouter);
 app.use("/queue", queueRouter);
 app.use("/appointment-completed", appointmentCompletedRouter);
 app.use("/get-all-medicine", getAllMedicineRouter);
+app.use("/get-all-revenue", getAllRevenueRouter);
 
 // .env stuff
 import dotenv from "dotenv";
@@ -106,10 +108,11 @@ app.get("/filtered-patients/:patientIC", async (req, res) => {
       },
     });
 
+    let noICError = {};
+    noICError["IC"] = "No patients found with the specified IC";
+
     if (filteredPatients.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "No patients found with the specified IC" });
+      return res.status(404).send({ error: noICError });
     }
 
     return res.json({ filteredPatients });
@@ -430,8 +433,10 @@ app.get("/invoice-details/:appointmentID", async (req, res) => {
           return 0; // Assuming a default value if medicine not found
         }
 
+        let consultationFee = 50;
+
         // Step 4: Calculate the total amount for each medication
-        const totalAmount = medicine.price * med.quantity;
+        const totalAmount = medicine.price * med.quantity + consultationFee;
 
         return totalAmount;
       })
@@ -490,10 +495,21 @@ app.get("/invoice-details/:appointmentID", async (req, res) => {
         "Reason",
         "Date",
         "Doctor",
+        "Consultation Fee",
         "Medicine 1",
         "Quantity 1",
-        "Medicine 1",
+        "Medicine 2",
         "Quantity 2",
+        "Medicine 3",
+        "Quantity 3",
+        "Medicine 4",
+        "Quantity 4",
+        "Medicine 5",
+        "Quantity 5",
+        "Medicine 6",
+        "Quantity 6",
+        "Medicine 7",
+        "Quantity 7",
         "Amount",
         // "Height",
         // "Weight",
@@ -508,10 +524,21 @@ app.get("/invoice-details/:appointmentID", async (req, res) => {
         details.reason,
         details.date,
         details.doctor,
+        50,
         details.medName1,
         details.quantity1,
         details.medName2,
         details.quantity2,
+        details.medName3,
+        details.quantity3,
+        details.medName4,
+        details.quantity4,
+        details.medName5,
+        details.quantity5,
+        details.medName6,
+        details.quantity6,
+        details.medName7,
+        details.quantity7,
         details.amount,
       ]);
     }
@@ -545,6 +572,16 @@ app.get("/invoice-details/:appointmentID", async (req, res) => {
 
 // cash payment just been made
 app.post("/click-paid/:appointmentID", async (req, res) => {
+  const data = req.body;
+  console.log(data);
+  let paymentMethod;
+  if (data.paymentMethod == "cash") {
+    paymentMethod = "cash";
+  } else if (data.paymentMethod == "card/transfer") {
+    paymentMethod = "card/transfer";
+  } else {
+    paymentMethod = "panel";
+  }
   try {
     const appointmentID = parseInt(req.params.appointmentID, 10); // Convert to integer
 
@@ -553,35 +590,37 @@ app.post("/click-paid/:appointmentID", async (req, res) => {
       where: { id: appointmentID },
       data: {
         status: "completed",
+        paymentMethod: paymentMethod,
       },
     });
 
-    // here we are going to get details from appoitnemtn table where id= appointmentID. we want to get the patientIC field and the amount field for this appointment.
-    // Fetch details from the appointment table
-    const appointmentDetails = await prisma.appointment.findUnique({
-      where: { id: appointmentID },
-      select: {
-        patientIC: true,
-        amount: true,
-      },
-    });
+    // THIS IS OLD WAY OF GETTING REVENUE
+    // // here we are going to get details from appoitnemtn table where id= appointmentID. we want to get the patientIC field and the amount field for this appointment.
+    // // Fetch details from the appointment table
+    // const appointmentDetails = await prisma.appointment.findUnique({
+    //   where: { id: appointmentID },
+    //   select: {
+    //     patientIC: true,
+    //     amount: true,
+    //   },
+    // });
 
-    if (!appointmentDetails) {
-      return res.status(404).json({ error: "Appointment not found" });
-    }
+    // if (!appointmentDetails) {
+    //   return res.status(404).json({ error: "Appointment not found" });
+    // }
 
-    // Add details to the cashRevenue table
-    const cashRevenueEntry = await prisma.cashRevenue.create({
-      data: {
-        appId: { connect: { id: appointmentID } },
-        patic: { connect: { IC: appointmentDetails.patientIC } },
-        amount: appointmentDetails.amount,
-      },
-    });
+    // // Add details to the cashRevenue table
+    // const cashRevenueEntry = await prisma.cashRevenue.create({
+    //   data: {
+    //     appId: { connect: { id: appointmentID } },
+    //     patic: { connect: { IC: appointmentDetails.patientIC } },
+    //     amount: appointmentDetails.amount,
+    //   },
+    // });
 
     return res.status(200).json({
       statusChange,
-      cashRevenueEntry,
+      // cashRevenueEntry,
     });
   } catch (error) {
     console.error("Error:", error);
@@ -1258,7 +1297,6 @@ app.patch(
 
         data: {
           reason: data.reason,
-          doctor: data.doctor,
           notes: data.notes,
           documents: data.documents,
           medName1: data.medName1,

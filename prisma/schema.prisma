@@ -34,7 +34,6 @@ model Patient {
   contact  String? @default("null")
   race     String? @default("null")
   appointment Appointment[]
-  cashRevenue CashRevenue[]
   Documents Documents[]
 }
 
@@ -43,8 +42,7 @@ model Appointment {
   specificpatient Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
   patientIC String? @default("null")    
   reason       String? @default("null")   
-  date DateTime
-  doctor  String @default("null")   
+  date DateTime  
   status String? @default("null")   
   arrivalTime DateTime? @default(now()) 
   consultStartTime DateTime? @default(now()) 
@@ -81,7 +79,7 @@ model Appointment {
   mcReason String? @default("null")
   letterDate DateTime? @default(now()) 
   letterContent String? @default("null")
-  cashRevenue CashRevenue[]
+  paymentMethod String? @default("null")
   Documents Documents[]
 }
 
@@ -90,15 +88,6 @@ model Medicine {
   medicine String @unique @default("null")
   quantity Int @default(0)
   price Int @default(0)
-}
-
-model CashRevenue {
-  id Int @id @default(autoincrement())
-  appId Appointment @relation(fields: [appointmentID], references: [id]) // Define the foreign key relationship 
-  appointmentID Int
-  patic Patient? @relation(fields: [patientIC], references: [IC]) // Define the foreign key relationship 
-  patientIC String? @default("null")
-  amount Int
 }
 
 model Documents {
