@@ -4,6 +4,7 @@ import prisma from "../utils/prisma.js";
 import { filter } from "../utils/common.js";
 import { DateTime } from "luxon"; // Import luxon library
 import { validateNewPatientAppt } from "../validators/newPatientAppt.js";
+import io from "../socket/index.js";
 
 const router = express.Router();
 
@@ -43,6 +44,10 @@ router.post("/", async (req, res) => {
         status: "Waiting",
         arrivalTime: adjustedTime,
       },
+    });
+
+    io.emit("new-patient-appointment", {
+      appointment: { ...appointment, patientDetails: patient },
     });
 
     return res.status(200).json({ appointment: appointment, patient: patient });
