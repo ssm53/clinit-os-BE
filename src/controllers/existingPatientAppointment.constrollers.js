@@ -24,6 +24,10 @@ router.post("/", async (req, res) => {
       },
     });
 
+    io.emit("existing-patient-appointment", {
+      appointment: { ...appointment },
+    });
+
     return res.status(200).json({ appointment: appointment });
   } catch (error) {
     console.error("Error creating appointment:", error);

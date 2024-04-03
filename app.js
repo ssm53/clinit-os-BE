@@ -226,6 +226,10 @@ app.post("/start-consultation/:appointmentID", async (req, res) => {
       data: { status: "serving" },
     });
 
+    io.emit("start-consultation", {
+      appointment: { consultStartTime, changeStatus },
+    });
+
     return res.status(200).json({
       consultStartTime,
       changeStatus,
@@ -254,6 +258,10 @@ app.post("/end-consultation/:appointmentID", async (req, res) => {
     const changeStatus = await prisma.appointment.update({
       where: { id: appointmentID },
       data: { status: "dispensary" },
+    });
+
+    io.emit("end-consultation", {
+      appointment: { changeStatus },
     });
 
     return res.status(200).json({
@@ -1095,6 +1103,11 @@ app.post("/click-arrived/:appointmentID", async (req, res) => {
         arrivalTime: adjustedTime,
       },
     });
+
+    io.emit("click-arrived", {
+      appointment: { bookingToWaiting },
+    });
+
     return res.status(200).json({
       bookingToWaiting,
     });
