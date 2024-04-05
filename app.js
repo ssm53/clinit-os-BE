@@ -226,9 +226,9 @@ app.post("/start-consultation/:appointmentID", async (req, res) => {
       data: { status: "serving" },
     });
 
-    io.emit("start-consultation", {
-      appointment: { consultStartTime, changeStatus },
-    });
+    // io.emit("start-consultation", {
+    //   appointment: { consultStartTime, changeStatus },
+    // });
 
     return res.status(200).json({
       consultStartTime,
@@ -260,9 +260,9 @@ app.post("/end-consultation/:appointmentID", async (req, res) => {
       data: { status: "dispensary" },
     });
 
-    io.emit("end-consultation", {
-      appointment: { changeStatus },
-    });
+    // io.emit("end-consultation", {
+    //   appointment: { changeStatus },
+    // });
 
     return res.status(200).json({
       consultEndTime,
@@ -1104,9 +1104,9 @@ app.post("/click-arrived/:appointmentID", async (req, res) => {
       },
     });
 
-    io.emit("click-arrived", {
-      appointment: { bookingToWaiting },
-    });
+    // io.emit("click-arrived", {
+    //   appointment: { bookingToWaiting },
+    // });
 
     return res.status(200).json({
       bookingToWaiting,

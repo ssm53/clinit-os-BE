@@ -33,9 +33,9 @@ router.get("/", async (req, res) => {
       return res.status(404).json({ error: "No waiting appointments found" });
     }
 
-    io.emit("queue", {
-      appointmentsWaiting: { ...appointmentsWaiting },
-    });
+    // io.emit("queue", {
+    //   appointmentsWaiting: { ...appointmentsWaiting },
+    // });
 
     return res.json({ appointmentsWaiting });
   } catch (error) {

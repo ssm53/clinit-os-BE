@@ -46,9 +46,9 @@ router.post("/", async (req, res) => {
       },
     });
 
-    io.emit("new-patient-appointment", {
-      appointment: { ...appointment, patientDetails: patient },
-    });
+    // io.emit("new-patient-appointment", {
+    //   appointment: { ...appointment, patientDetails: patient },
+    // });
 
     return res.status(200).json({ appointment: appointment, patient: patient });
   } catch (err) {
