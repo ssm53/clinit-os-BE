@@ -121,6 +121,7 @@ app.get("/filtered-patients/:patientIC", async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
+//
 
 // get part patient info for consulattion page
 app.get("/part-patient-info/:patientIC", async (req, res) => {
